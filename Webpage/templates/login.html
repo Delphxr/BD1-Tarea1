@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="alert alert-dismissible alert-success">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{msg}}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+{% endblock %}
+
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link href="https://bootswatch.com/4/cyborg/bootstrap.min.css" rel="stylesheet" type ="text/css">
-
-
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://bootswatch.com/4/flatly/bootstrap.min.css" rel="stylesheet" type="text/css">
     <title>Login</title>
-
 </head>
 
 <body class="bg-gradient-primary">
@@ -17,34 +28,33 @@
         <!-- Outer Row -->
         <div class="row justify-content-center">
 
-            <div class="col-xl-10 col-lg-12 col-md-9">
+            <div class="col-xl-19 col-lg-6 col-md-19">
 
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
+                <div class="card o-hidden border-0 shadow-lg spacer my-5">
+                    <div class="card-body p-10">
                         <!-- Nested Row within Card Body -->
-                        <div class="row">
-                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
-                                
-                            <div class="col-lg-6">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-0 d-none d-lg-block bg-login-image"></div>
+
+                            <div class="col-lg-10">
                                 <div class="p-5">
                                     <div class="text-center">
                                         <h1 class="h4 text-gray-900 mb-4">Inicio de Sesión</h1>
                                     </div>
                                     <form action="#" method="POST" class="user">
                                         <p>
-                                            <input type="text" name="username" class="form-control form-control-user" placeholder="Ingrese su usuario...">
+                                            <input type="text" name="username" class="form-control form-control-user"
+                                                placeholder="Ingrese su usuario...">
                                         </p>
                                         <p>
-                                            <input type="password" name="password" class="form-control form-control-user" placeholder="Contraseña">
+                                            <input type="password" name="password"
+                                                class="form-control form-control-user" placeholder="Contraseña">
                                         </p>
 
                                         <p><input type="submit" class="btn btn-primary btn-user btn-block">
-                                            
+
                                         </p>
-                                        <hr>
-                                        
-                                    </form>
-                                    <hr>
+
                                 </div>
                             </div>
                         </div>
@@ -60,10 +70,16 @@
 
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-   
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
 
 </body>
 
