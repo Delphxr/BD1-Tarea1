@@ -1,9 +1,17 @@
-# ojo si esto no funciona poner en la terminal: pip install flask
+#pip install flask
 from flask import Flask, redirect, url_for, render_template, request, session, flash
+
+#pip install flask-sqlalchemy
+import sqlalchemy
+
+IMAGE_FOLDER = "img/"
 
 app = Flask(__name__)  # creamos la pagina
 # key para tener los datos de inicio de secion encriptados
 app.secret_key = "c8gd6qlgK4N2*XtLeHa2ykCj!fQrR(a@R)t4TaLee43c$F9&)2w6"
+#folder de imagenes
+app.config["UPLOAD_FOLDER"] = IMAGE_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
 # definimos la ruta de la funcoin en la pagina, en este o la pagina principal
@@ -40,17 +48,19 @@ def login():
 # pagina de cerrar sesión
 @app.route("/logout/")
 def logout():
+    if "user" in session and "password" in session:
+        flash("Se ha cerrado la sesión", "info")
+    
     session.pop("user", None)
     session.pop("password", None)
-    flash("Se ha cerrado la sesión", "info")
     return redirect(url_for("login"))
 
 
+#pagina principal
 @app.route("/home/")
 def home():
-    if "user" in session and "password" in session:
+    if "user" in session and "password" in session: #verificamos que el usuario alla iniciado sesion
         user = session["user"]
-        # return render_template("uso_base.html")
         return render_template("uso_base.html")
     else:
         # si no tenemos sesion iniciada nos devuelve al inicio de sesion
@@ -60,7 +70,6 @@ def home():
 # con esto redireccionamos otra pagina
 @app.route("/")
 def redirect_to_login():
-    # ponemos el nombre de la funcion a la que vamos a redireccionar
     return redirect(url_for("login"))
     # return redirect(url_for("invalido", dir="argumento")) #si queremos redireccionar a una funcoin que recibe argumentos lo hacemos así
 
