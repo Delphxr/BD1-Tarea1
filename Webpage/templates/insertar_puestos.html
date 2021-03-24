@@ -1,0 +1,41 @@
+{% extends "navbar.html" %}
+{% block title %}Insertar Puestos{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="card-body p-15">
+        <form>
+            
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
+                    <label for="validationServer01">Nombre</label>
+                    <input type="text" class="form-control" id="validationServer01" placeholder="Auxiliar de laboratorio"
+                        required>
+
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="validationServer04">Salario por Hora</label>
+                    <input type="number" class="form-control" min="0" id="validationServer02" placeholder="1250"
+                        required>
+
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input is-invalid" type="checkbox" value="" id="invalidCheck3" required>
+                    <label class="form-check-label" for="invalidCheck3">
+                        Confirmar
+                    </label>
+                    <div class="invalid-feedback">
+                        Debe confirmar los cambios a realizar
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="submit">Insertar</button>
+        </form>
+    </div>
+</div>
+
+
+
+{% endblock %}

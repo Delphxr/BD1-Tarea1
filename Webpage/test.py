@@ -23,6 +23,8 @@ def test():
     return render_template("hello_world.html", argumento_prueba=argumento_prueba, test_list=test_list)
 
 
+
+
 # pagina de inicio de sesión
 @app.route("/login/", methods=["POST", "GET"])
 def login():
@@ -56,15 +58,56 @@ def logout():
     return redirect(url_for("login"))
 
 
+#verificamos si hay una sesión iniciada, retornamos true o false
+def verificar_sesion():
+    if "user" in session and "password" in session: #verificamos que el usuario alla iniciado sesion
+        return True
+    else:
+        return False
+
+
 #pagina principal
 @app.route("/home/")
 def home():
-    if "user" in session and "password" in session: #verificamos que el usuario alla iniciado sesion
-        user = session["user"]
-        return render_template("uso_base.html")
+    if verificar_sesion():
+        return render_template("homepage.html")
     else:
-        # si no tenemos sesion iniciada nos devuelve al inicio de sesion
+        return redirect(url_for("login")) 
+
+#pagina de listar puestos
+@app.route("/listar_puestos/")
+def listar_puestos():
+    if verificar_sesion():
+        return render_template("listar_puestos.html")
+    else:
+        return redirect(url_for("login")) 
+
+#pagina de edicion de puestos
+@app.route("/editar_puestos/")
+def editar_puestos():
+    if verificar_sesion():
+        return render_template("editar_puestos.html")
+    else:
         return redirect(url_for("login"))
+
+
+#pagina de insertar de puestos
+@app.route("/insertar_puestos/")
+def insertar_puestos():
+    if verificar_sesion():
+        return render_template("insertar_puestos.html")
+    else:
+        return redirect(url_for("login"))
+
+
+
+#pagina de listar puestos
+@app.route("/listar_empleados/")
+def listar_empleados():
+    if verificar_sesion():
+        return render_template("listar_empleados.html")
+    else:
+        return redirect(url_for("login")) 
 
 
 # con esto redireccionamos otra pagina
