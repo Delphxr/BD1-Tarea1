@@ -4,24 +4,22 @@ from flask import Flask, redirect, url_for, render_template, request, session, f
 #pip install flask-sqlalchemy
 import sqlalchemy
 
-IMAGE_FOLDER = "img/"
+#encargado de comunicar entre el front end y la BD
+import Logic
+
+
 
 app = Flask(__name__)  # creamos la pagina
 # key para tener los datos de inicio de secion encriptados
 app.secret_key = "c8gd6qlgK4N2*XtLeHa2ykCj!fQrR(a@R)t4TaLee43c$F9&)2w6"
-#folder de imagenes
-app.config["UPLOAD_FOLDER"] = IMAGE_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
-# definimos la ruta de la funcoin en la pagina, en este o la pagina principal
-@app.route("/test/")
-def test():
-    test_list = ["1", "dos", "tres", "4tro"]
-    argumento_prueba = "aguacate"
-    # usamos un archivo html en vez de escribir todo por strings
-    return render_template("hello_world.html", argumento_prueba=argumento_prueba, test_list=test_list)
-
+#verificamos si hay una sesión iniciada, retornamos true o false
+def verificar_sesion():
+    if "user" in session and "password" in session: #verificamos que el usuario alla iniciado sesion
+        return True
+    else:
+        return False
 
 
 
@@ -46,7 +44,7 @@ def login():
             return render_template("login.html")
 
 
-
+ 
 # pagina de cerrar sesión
 @app.route("/logout/")
 def logout():
@@ -58,13 +56,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-#verificamos si hay una sesión iniciada, retornamos true o false
-def verificar_sesion():
-    if "user" in session and "password" in session: #verificamos que el usuario alla iniciado sesion
-        return True
-    else:
-        return False
-
 
 #pagina principal
 @app.route("/home/")
@@ -74,6 +65,7 @@ def home():
     else:
         return redirect(url_for("login")) 
 
+
 #pagina de listar puestos
 @app.route("/listar_puestos/")
 def listar_puestos():
@@ -81,6 +73,7 @@ def listar_puestos():
         return render_template("listar_puestos.html")
     else:
         return redirect(url_for("login")) 
+
 
 #pagina de edicion de puestos
 @app.route("/editar_puestos/")
@@ -101,16 +94,74 @@ def insertar_puestos():
 
 
 
-#pagina de listar puestos
+#pagina de listar empleados
 @app.route("/listar_empleados/")
 def listar_empleados():
     if verificar_sesion():
-        return render_template("listar_empleados.html")
+        return render_template("listar_empleados.html", empleados=Logic.get_empleados())
     else:
         return redirect(url_for("login")) 
 
+@app.route("/filtrar_empleados/", methods=["POST", "GET"])
+def filtrar_empleados():
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        return render_template("filtrar_empleados.html", empleados=Logic.get_empleados(), busqueda=nombre)
+    else:
+        if verificar_sesion():
+            return render_template("filtrar_empleados.html", empleados=Logic.get_empleados(),busqueda="")
+        else:
+            return redirect(url_for("login")) 
 
-# con esto redireccionamos otra pagina
+
+#pagina de insertar nuevo empleado
+@app.route("/insertar_empleados/", methods=["POST", "GET"])
+def insertar_empleados():
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        #tipodi = request.form["tipodi"]
+        tipodi = 8
+        valordi = request.form["valordi"]
+        #departamento = request.form["departamento"]
+        departamento = 9
+        puesto = request.form["puesto"]
+        nacimiento = request.form["nacimiento"]
+
+        Logic.insert_empleado(nombre,tipodi,valordi,departamento,puesto,nacimiento)
+
+        return redirect(url_for("home"))
+    else:
+        if verificar_sesion():
+            return render_template("insertar_empleados.html")
+        else:
+            return redirect(url_for("login")) 
+
+#editar un empleado
+@app.route("/editar_empleados/", methods=["POST", "GET"])
+def editar_empleados():
+    if request.method == "POST":
+
+        editado = request.form["editado"]
+        nombre = request.form["nombre"]
+        #tipodi = request.form["tipodi"]
+        tipodi = 8
+        valordi = request.form["valordi"]
+        #departamento = request.form["departamento"]
+        departamento = 9
+        puesto = request.form["puesto"]
+        nacimiento = request.form["nacimiento"]
+
+
+        return redirect(url_for("home"))
+    else:
+        if verificar_sesion():
+            return render_template("editar_empleados.html")
+        else:
+            return redirect(url_for("login")) 
+
+
+
+# con esto redireccionamos al login apenas ingresar a la pagina
 @app.route("/")
 def redirect_to_login():
     return redirect(url_for("login"))

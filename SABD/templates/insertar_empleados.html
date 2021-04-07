@@ -1,0 +1,80 @@
+{% extends "navbar.html" %}
+{% block title %}Insertar Empleado{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="hero-unit">
+        <p>
+        <h1>Insertar Empleados: </h1>
+        </p>
+  
+
+    </div>
+    <div class="card-body p-15 shadow-lg my-5">
+        
+        <form action="" method="POST" class="user">
+            
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
+                    <label for="validationServer01">Nombre</label>
+                    <input type="text" class="form-control" name="nombre" id="validationServer01" placeholder="Pepito Carranza"
+                        required>
+
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="validationServer02">Tipo Documento Identificación</label>
+                    <select class="form-control form-control" id="validationServer02" name="tipodi" required>
+                        <option>Cedula</option>
+                        <option>Pasaporte</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationServer03">Valor Documento Identificación</label>
+                    <input type="number" class="form-control" min="0" id="validationServer03" name="valordi" placeholder="402500356"
+                        required>
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationServer04">Departamento</label>
+                    <select class="form-control form-control" id="validationServer04" name="departamento" required>
+                        <option>Enlaminado</option>
+                        <option>Laboratorio</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationServer05">Puesto</label>
+                    <select class="form-control form-control" id="validationServer05" name="puesto" required>
+                        <option>Electricista</option>
+                        <option>Operador de Maquina</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationServer06">Fecha Nacimiento</label>
+                    <input type="text" class="form-control" name="nacimiento" id="validationServer06" placeholder="1998-05-10"
+                        required>
+
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input is-invalid" type="checkbox" value="" id="invalidCheck3" required>
+                    <label class="form-check-label" for="invalidCheck3">
+                        Confirmar cambios
+                    </label>
+                    <div class="invalid-feedback">
+                        Debe confirmar los cambios a realizar
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="submit">Editar</button>
+        </form>
+    </div>
+</div>
+
+
+
+{% endblock %}

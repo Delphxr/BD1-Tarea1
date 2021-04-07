@@ -1,48 +1,45 @@
 #pip install pyodbc
 import pyodbc
 
-#leemos una tabla
-def read(conection):
-    print("read")
-    cursor = conection.cursor()
-    cursor.execute("SELECT * FROM [dbo].[Test_1]")
-    for row in cursor:
-        print(row)
-    print()
 
-#creamos un elemento en la tabla
-def create(conection):
+def read():
+    print("read")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM [dbo].[Test_1]")
+    return (tuple(cursor))
+
+#insertamos un elemento en la tabla
+def insert(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
     print("create")
-    cursor = conection.cursor()
+    cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO [dbo].[Test_1] (Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento) values(?,?,?,?,?,?)",
-        ("Antonio Fronteras",2 ,123456,5, "Jefe de cuidado del cabello","1975-5-10")
+        (Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
     )
-    conection.commit()
-    read(conection)
-    print()
+    conn.commit()
+
 
 #modificamos un elemento en la tabla
-def update(conection):
+def update():
     print("update")
-    cursor = conection.cursor()
+    cursor = conn.cursor()
     cursor.execute(
         "UPDATE [dbo].[Test_1] SET Nombre = ? WHERE Nombre = ?",
         ("Figeruno fugofugo","Antonio Fronteras")
     )
-    conection.commit()
-    read(conection)
+    conn.commit()
+    read()
     print()
 
 #eliminamos un elemento en la tabla
-def delete(conection):
+def delete():
     print("delete")
-    cursor = conection.cursor()
+    cursor = conn.cursor()
     cursor.execute(
         "DELETE FROM [dbo].[Test_1] WHERE Id > 2"
     )
-    conection.commit()
-    read(conection)
+    conn.commit()
+    read()
     print()
 
 #hacemos una coneccion on la base de datos
@@ -53,10 +50,10 @@ conn = pyodbc.connect(
     "Trusted_Connection=yes;"
 )
 
+if __name__ == "__main__":
+    read(conn)
+    insert(conn)
+    update(conn)
+    delete(conn)
 
-read(conn)
-create(conn)
-update(conn)
-delete(conn)
-
-conn.close()
+    conn.close()
