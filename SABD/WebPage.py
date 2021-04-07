@@ -59,8 +59,9 @@ def logout():
 
 #pagina principal
 @app.route("/home/")
-def home():
+def home(dir=""):
     if verificar_sesion():
+        print(dir)
         return render_template("homepage.html")
     else:
         return redirect(url_for("login")) 
@@ -70,7 +71,7 @@ def home():
 @app.route("/listar_puestos/")
 def listar_puestos():
     if verificar_sesion():
-        return render_template("listar_puestos.html")
+        return render_template("listar_puestos.html", puestos=Logic.get_puestos())
     else:
         return redirect(url_for("login")) 
 
@@ -79,7 +80,7 @@ def listar_puestos():
 @app.route("/editar_puestos/")
 def editar_puestos():
     if verificar_sesion():
-        return render_template("editar_puestos.html")
+        return render_template("editar_puestos.html", puestos=Logic.get_puestos())
     else:
         return redirect(url_for("login"))
 
@@ -102,6 +103,8 @@ def listar_empleados():
     else:
         return redirect(url_for("login")) 
 
+
+#pagina de filtracion(busqueda) de empleados
 @app.route("/filtrar_empleados/", methods=["POST", "GET"])
 def filtrar_empleados():
     if request.method == "POST":
@@ -111,7 +114,7 @@ def filtrar_empleados():
         if verificar_sesion():
             return render_template("filtrar_empleados.html", empleados=Logic.get_empleados(),busqueda="")
         else:
-            return redirect(url_for("login")) 
+            return redirect(url_for("login"))
 
 
 #pagina de insertar nuevo empleado
@@ -132,7 +135,11 @@ def insertar_empleados():
         return redirect(url_for("home"))
     else:
         if verificar_sesion():
-            return render_template("insertar_empleados.html")
+            return render_template("insertar_empleados.html",
+            tipos_di=Logic.get_tipos_di(),
+            departamentos=Logic.get_departamentos(),
+            puestos=Logic.get_puestos()
+            )
         else:
             return redirect(url_for("login")) 
 
@@ -146,26 +153,35 @@ def editar_empleados():
         #tipodi = request.form["tipodi"]
         tipodi = 8
         valordi = request.form["valordi"]
-        #departamento = request.form["departamento"]
-        departamento = 9
+        departamento = request.form["departamento"]
+        #departamento = 9
         puesto = request.form["puesto"]
         nacimiento = request.form["nacimiento"]
 
-
+        print(departamento)
         return redirect(url_for("home"))
     else:
         if verificar_sesion():
-            return render_template("editar_empleados.html")
+            return render_template("editar_empleados.html",
+            empleados=Logic.get_empleados(), 
+            tipos_di=Logic.get_tipos_di(),
+            departamentos=Logic.get_departamentos(),
+            puestos=Logic.get_puestos()
+            )
+
         else:
             return redirect(url_for("login")) 
 
 
 
-# con esto redireccionamos al login apenas ingresar a la pagina
-@app.route("/")
-def redirect_to_login():
-    return redirect(url_for("login"))
-    # return redirect(url_for("invalido", dir="argumento")) #si queremos redireccionar a una funcoin que recibe argumentos lo hacemos así
+
+@app.route("/test/<name>", methods=['GET', 'POST'])
+def test(name):
+    return f"Hello! {name}"
+
+@app.route("/lll/")
+def a():
+    return redirect(url_for("test", name="prueba de argumento"))
 
 
 # ejecutamos la pagina

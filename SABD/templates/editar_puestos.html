@@ -14,10 +14,11 @@
 
             <div class="form-row">
                 <div class="col-md-4 mb-3">
-                    <label for="validationServer02">Puesto</label>
+                    <label for="validationServer02">Puesto a Editar:</label>
                     <select class="form-control form-control" id="validationServer02" name="tipodi" required>
-                        <option>Cedula</option>
-                        <option>Pasaporte</option>
+                        {% for puesto in puestos %}
+                        <option value={{puesto[0]}}>{{puesto[1]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 

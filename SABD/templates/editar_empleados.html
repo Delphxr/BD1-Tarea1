@@ -1,5 +1,5 @@
 {% extends "navbar.html" %}
-{% block title %}Insertar Empleado{% endblock %}
+{% block title %}Editar Empleado{% endblock %}
 {% block content %}
 <div class="container">
     <div class="hero-unit">
@@ -9,61 +9,71 @@
 
     </div>
     <div class="card-body p-15 shadow-lg my-5">
-        
+
         <form action="" method="POST" class="user">
 
             <div class="form-row">
 
                 <div class="col-md-3 mb-3">
-                    <label for="validationServer02">Empleado</label>
+                    <label for="validationServer02">Empleado a Editar:</label>
                     <select class="form-control form-control" name="editado" id="validationServer02" name="tipodi"
                         required>
-                        <option>Cedula</option>
-                        <option>Pasaporte</option>
+                        {% for empleado in empleados %}
+                        <option value={{empleado[0]}}>{{empleado[1]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="validationServer01">Nombre</label>
                     <input type="text" class="form-control" name="nombre" id="validationServer01"
-                        placeholder="Pepito Carranza" required>
+                        placeholder="{{ empleados[0][1] }}" required>
 
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="validationServer02">Tipo Documento Identificación</label>
                     <select class="form-control form-control" id="validationServer02" name="tipodi" required>
-                        <option>Cedula</option>
-                        <option>Pasaporte</option>
+                        <option value="" selected disabled>{{ empleados[0][2] }}</option>
+
+                        {% for tipo_di in tipos_di %}
+                        <option value={{tipo_di[0]}}>{{tipo_di[1]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer03">Valor Documento Identificación</label>
                     <input type="number" class="form-control" min="0" id="validationServer03" name="valordi"
-                        placeholder="402500356" required>
+                        placeholder="{{ empleados[0][3] }}" required>
 
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer04">Departamento</label>
                     <select class="form-control form-control" id="validationServer04" name="departamento" required>
-                        <option>Enlaminado</option>
-                        <option>Laboratorio</option>
+                        <option value="" selected disabled>{{ empleados[0][4] }}</option>
+
+                        {% for departamento in departamentos %}
+                        <option value={{departamento[0]}}>{{departamento[1]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer05">Puesto</label>
                     <select class="form-control form-control" id="validationServer05" name="puesto" required>
-                        <option>Electricista</option>
-                        <option>Operador de Maquina</option>
+                        <option value="" selected disabled>{{ empleados[0][5] }}</option>
+
+                        {% for puesto in puestos %}
+                        <option value={{puesto[0]}}>{{puesto[1]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer06">Fecha Nacimiento</label>
-                    <input type="text" class="form-control" name="nacimiento" id="validationServer06"
-                        placeholder="1998-05-10" required>
+                    <input type="date" class="form-control" name="nacimiento" id="validationServer06"
+                         value="{{ empleados[0][6] }}" required>
 
                 </div>
 

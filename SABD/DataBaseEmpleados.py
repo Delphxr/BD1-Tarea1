@@ -51,9 +51,9 @@ conn = pyodbc.connect(
 )
 
 if __name__ == "__main__":
-    read(conn)
-    insert(conn)
-    update(conn)
-    delete(conn)
+    read()
+    insert()
+    update()
+    delete()
 
     conn.close()
