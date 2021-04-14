@@ -1,0 +1,27 @@
+﻿<!--Entidades no-Catalogos-->
+<Empleados>
+  <Empleado
+      Nombre="Juanito Valderrama"
+      IdTipoIdentificacion="3"
+      ValorDocumentoIdentificacion="123344555"
+      IdDepartamento="2"
+      Puesto="Electricista"
+      FechaNacimiento="1998-05-10"
+  />
+  <Empleado
+      Nombre="Roberto Aldecoba"
+      IdTipoIdentificacion="1"
+      ValorDocumentoIdentificacion="123344455"
+      IdDepartamento="3"
+      Puesto="Operador de Maquina"
+      FechaNacimiento="1985-08-21"
+  />
+  <Empleado
+      Nombre="Jenaro Murillo"
+      IdTipoIdentificacion="5"
+      ValorDocumentoIdentificacion="123344556"
+      IdDepartamento="2"
+      Puesto="Auxiliar de Laboratorio"
+      FechaNacimiento="2000-08-29"
+  />
+</Empleados>

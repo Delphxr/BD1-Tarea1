@@ -1,0 +1,9 @@
+<!-- catalogos-->
+<Tipos_de_Documento_de_Identidad>
+  <TipoDocuIdentidad Id="1" Nombre="Cedula Nacional"/>
+  <TipoDocuIdentidad Id="2" Nombre="Cedula Residente"/>
+  <TipoDocuIdentidad Id="3" Nombre="Pasaporte"/>
+  <TipoDocuIdentidad Id="4" Nombre="Cedula Juridica"/>
+  <TipoDocuIdentidad Id="5" Nombre="Permiso de Trabajo"/>
+  <TipoDocuIdentidad Id="6" Nombre="Cedula Extranjera"/>
+</Tipos_de_Documento_de_Identidad>

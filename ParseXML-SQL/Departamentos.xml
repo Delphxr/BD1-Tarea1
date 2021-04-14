@@ -1,0 +1,7 @@
+﻿<!-- catalogos-->
+<Departamentos>
+  <Departamento Id="1" Nombre="Enlaminado"/>
+  <Departamento Id="2" Nombre="Laboratorio"/>
+  <Departamento Id="3" Nombre="Bodega de materiales"/>
+  <Departamento Id="4" Nombre="Bodega de producto terminado"/>
+</Departamentos>
