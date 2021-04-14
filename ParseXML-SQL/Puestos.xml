@@ -1,0 +1,6 @@
+﻿<!-- catalogos-->
+<Puestos>
+  <Puesto Id="1" Nombre="Electricista" SalarioXHora="1200"/>
+  <Puesto Id="2" Nombre="Auxiliar de Laboratorio" SalarioXHora="1250"/>
+  <Puesto Id="3" Nombre="Operador de Maquina" SalarioXHora="1025"/>
+</Puestos>
