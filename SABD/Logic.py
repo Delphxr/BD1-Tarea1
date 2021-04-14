@@ -1,5 +1,5 @@
 import DataBaseEmpleados
-import operator
+
 
 
 #de esta forma obtenemos los nombres en minuscula como llaves para los sort
@@ -35,7 +35,7 @@ def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, 
 
 def get_puestos():
     test = ((1,"Electricista",1200),(2,"prueba del Logic",1250))
-    test = sorted(test, key=operator.itemgetter(1)) #ordenamos en orden alfabetico
+    test = sorted(test, key=lower_getter(1)) #ordenamos en orden alfabetico
     return test
 
 def get_tipos_di():

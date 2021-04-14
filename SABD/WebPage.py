@@ -109,10 +109,18 @@ def listar_empleados():
 def filtrar_empleados():
     if request.method == "POST":
         nombre = request.form["nombre"]
-        return render_template("filtrar_empleados.html", empleados=Logic.get_empleados(), busqueda=nombre)
+
+        return render_template("filtrar_empleados.html",
+        empleados=Logic.get_empleados(),
+        busqueda=nombre
+        )
+    
     else:
         if verificar_sesion():
-            return render_template("filtrar_empleados.html", empleados=Logic.get_empleados(),busqueda="")
+            return render_template("filtrar_empleados.html",
+            empleados=Logic.get_empleados(),
+            busqueda=""
+            )
         else:
             return redirect(url_for("login"))
 
@@ -158,7 +166,6 @@ def editar_empleados():
         puesto = request.form["puesto"]
         nacimiento = request.form["nacimiento"]
 
-        print(departamento)
         return redirect(url_for("home"))
     else:
         if verificar_sesion():
@@ -179,9 +186,9 @@ def editar_empleados():
 def test(name):
     return f"Hello! {name}"
 
-@app.route("/lll/")
-def a():
-    return redirect(url_for("test", name="prueba de argumento"))
+@app.route("/")
+def inicio():
+    return redirect(url_for("home"))
 
 
 # ejecutamos la pagina
