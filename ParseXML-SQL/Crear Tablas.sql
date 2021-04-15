@@ -14,7 +14,8 @@ CREATE TABLE dbo.Puestos
 	(
 	ID int NOT NULL,
 	Nombre varchar(50) NOT NULL,
-	SalarioXHora money NOT NULL
+	SalarioXHora money NOT NULL,
+	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
 ALTER TABLE dbo.Puestos ADD CONSTRAINT
@@ -55,7 +56,8 @@ CREATE TABLE dbo.Empleados
 	ValorDocumentoIdentificacion varchar(10) NOT NULL,
 	IdDepartamento int NOT NULL,
 	IdPuesto int NOT NULL,
-	FechaNacimiento date NOT NULL
+	FechaNacimiento date NOT NULL,
+	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
 ALTER TABLE dbo.Empleados ADD CONSTRAINT
@@ -119,5 +121,25 @@ ALTER TABLE dbo.Empleados ADD CONSTRAINT
 GO
 
 ALTER TABLE dbo.Departamentos SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.Administradores
+	(
+	Usuario varchar(50) NOT NULL,
+	Contrasena varchar(50) NOT NULL,
+	Nombre varchar(50) NOT NULL,
+	Tipo int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.Administradores ADD CONSTRAINT
+	PK_Administradores PRIMARY KEY CLUSTERED 
+	(
+	Usuario
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.Administradores SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT

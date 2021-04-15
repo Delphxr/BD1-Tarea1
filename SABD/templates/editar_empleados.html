@@ -27,7 +27,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="validationServer01">Nombre</label>
                     <input type="text" class="form-control" name="nombre" id="validationServer01"
-                        placeholder="{{ empleados[0][1] }}" required>
+                        placeholder="{% if empleados|length > 0 %}{{empleados[0][1]}}{% else %}Juanito Valderrama{% endif %}" required>
 
                 </div>
                 <div class="col-md-3 mb-3">
@@ -43,7 +43,7 @@
                 <div class="col-md-3 mb-3">
                     <label for="validationServer03">Valor Documento Identificación</label>
                     <input type="number" class="form-control" min="0" id="validationServer03" name="valordi"
-                        placeholder="{{ empleados[0][3] }}" required>
+                        placeholder="{% if empleados|length > 0 %}{{empleados[0][3]}}{% else %}402350321{% endif %}" required>
 
                 </div>
 
@@ -70,7 +70,7 @@
                 <div class="col-md-3 mb-3">
                     <label for="validationServer06">Fecha Nacimiento</label>
                     <input type="date" class="form-control" name="nacimiento" id="validationServer06"
-                         value="{{ empleados[0][6] }}" required>
+                         value="{% if empleados|length > 0 %}{{empleados[0][6]}}{% else %}1998-05-10{% endif %}" required>
 
                 </div>
 
