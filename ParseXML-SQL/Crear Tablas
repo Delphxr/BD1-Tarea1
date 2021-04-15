@@ -13,7 +13,7 @@ GO
 CREATE TABLE dbo.Puestos
 	(
 	ID int NOT NULL,
-	Nombre nchar(50) NOT NULL,
+	Nombre varchar(50) NOT NULL,
 	SalarioXHora money NOT NULL
 	)  ON [PRIMARY]
 GO
@@ -32,7 +32,7 @@ GO
 CREATE TABLE dbo.TipoDocIdent
 	(
 	ID int NOT NULL,
-	Nombre nchar(20) NOT NULL
+	Nombre varchar(20) NOT NULL
 	)  ON [PRIMARY]
 GO
 ALTER TABLE dbo.TipoDocIdent ADD CONSTRAINT
@@ -50,9 +50,9 @@ GO
 CREATE TABLE dbo.Empleados
 	(
 	ID int NOT NULL IDENTITY (1, 1),
-	Nombre nchar(100) NOT NULL,
+	Nombre varchar(100) NOT NULL,
 	IdTipoIdentificacion int NOT NULL,
-	ValorDocumentoIdentificacion nchar(10) NOT NULL,
+	ValorDocumentoIdentificacion varchar(10) NOT NULL,
 	IdDepartamento int NOT NULL,
 	IdPuesto int NOT NULL,
 	FechaNacimiento date NOT NULL
@@ -96,7 +96,7 @@ CREATE TABLE dbo.Departamentos
 	(
 	ID int NOT NULL,
 	IdJefe int NOT NULL,
-	Nombre nchar(50) NOT NULL
+	Nombre varchar(50) NOT NULL
 	)  ON [PRIMARY]
 GO
 ALTER TABLE dbo.Departamentos ADD CONSTRAINT
