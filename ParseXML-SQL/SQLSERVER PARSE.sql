@@ -1,52 +1,30 @@
-DECLARE @TipoID xml
+DECLARE @Datos xml
  
-SELECT @TipoID = T
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Bases Datos\TipoIdentidad.xml', SINGLE_BLOB) AS TipoID(T)
+SELECT @Datos = D
+FROM OPENROWSET (BULK 'D:\DatosXML.xml', SINGLE_BLOB) AS Datos(D)
     
 DECLARE @hdoc int
     
-EXEC sp_xml_preparedocument @hdoc OUTPUT, @TipoID
+EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos
 INSERT INTO dbo.TipoDocIdent
 SELECT *
-FROM OPENXML (@hdoc, '/Tipos_de_Documento_de_Identidad/TipoDocuIdentidad' , 1)
+FROM OPENXML (@hdoc, '/Datos/Tipos_de_Documento_de_Identidad/TipoDocuIdentidad' , 1)
 WITH(
 	Id int,
     Nombre VARCHAR(20)
     )
-    
-EXEC sp_xml_removedocument @hdoc
-
-DECLARE @Puestos xml
- 
-SELECT @Puestos = P
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Bases Datos\Puestos.xml', SINGLE_BLOB) AS Puestos(P)
-    
-  
-EXEC sp_xml_preparedocument @hdoc OUTPUT, @Puestos
-
 INSERT INTO dbo.Puestos
 SELECT *
-FROM OPENXML (@hdoc, '/Puestos/Puesto' , 1)
+FROM OPENXML (@hdoc, '/Datos/Puestos/Puesto' , 1)
 WITH(
 	Id int,
     Nombre VARCHAR(50),
 	SalarioXHora money
     )
-    
-    
-EXEC sp_xml_removedocument @hdoc
-
-DECLARE @Departamentos xml
- 
-SELECT @Departamentos = D
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Bases Datos\Departamentos.xml', SINGLE_BLOB) AS Depa(D)
-    
-    
-EXEC sp_xml_preparedocument @hdoc OUTPUT, @Departamentos
 
 INSERT INTO dbo.Departamentos
 SELECT *
-FROM OPENXML (@hdoc, '/Departamentos/Departamento' , 1)
+FROM OPENXML (@hdoc, '/Datos/Departamentos/Departamento' , 1)
 WITH(
 	Id int,
 	IdJefe int,
@@ -54,21 +32,12 @@ WITH(
     )
     
     
-EXEC sp_xml_removedocument @hdoc
-
-DECLARE @Empleados xml
- 
-SELECT @Empleados = E
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Bases Datos\Empleados.xml', SINGLE_BLOB) AS Emp(E)
-     
-   
-EXEC sp_xml_preparedocument @hdoc OUTPUT, @Empleados
-
 DELETE FROM dbo.Empleados
 DBCC CHECKIDENT ('Empleados', RESEED, 0)
+
 INSERT INTO dbo.Empleados(Nombre,IdTipoIdentificacion,ValorDocumentoIdentificacion,IdDepartamento,IdPuesto,FechaNacimiento)
 SELECT *
-FROM OPENXML (@hdoc, '/Empleados/Empleado' , 1)
+FROM OPENXML (@hdoc, '/Datos/Empleados/Empleado' , 1)
 WITH(
     Nombre VARCHAR(100),
 	IdTipoIdentificacion int,
@@ -77,6 +46,18 @@ WITH(
 	IdPuesto int,
 	FechaNacimiento date
     )
-    
+ 
+DELETE FROM dbo.Usuarios
+DBCC CHECKIDENT ('Usuarios', RESEED, 0)
+
+INSERT INTO dbo.Usuarios(Username,Nombre,Pasword,tipo)
+SELECT *
+FROM OPENXML (@hdoc, '/Datos/Usuarios/Usuario' , 1)
+WITH(
+    Username VARCHAR(50),
+	Nombre VARCHAR(100),
+	Pasword Password,
+	tipo int
+    )
     
 EXEC sp_xml_removedocument @hdoc
