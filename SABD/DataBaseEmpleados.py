@@ -23,6 +23,14 @@ def get_puestos_BD():
     return (puestos)
 
 def get_puestos_by_ID(Id):
+    """[obtenemos un puesto especifico con el id]
+
+    Args:
+        Id ([int]): [id del puesto a pedir]
+
+    Returns:
+        [tuple]: [tuplcon el puesto]
+    """    
     cursor = conn.cursor()
     cursor.execute(
         """
@@ -36,7 +44,7 @@ def get_puestos_by_ID(Id):
     )
     puesto = tuple(cursor)
     cursor.close()
-    return (puesto[0])
+    return (puesto)
 
 def insertar_puesto_BD(Id,Nombre,SalarioXHora):
     """[Insertamos un puesto a la base de datos]
@@ -109,6 +117,30 @@ def get_empleados_BD():
     empleados = tuple(cursor)
     cursor.close()
     return (empleados)
+
+def get_empleados_by_ID(Id):
+    """[obtenemos el empleado con el id especifico]
+
+    Args:
+        Id ([int]): [id del empleado a pedir]
+
+    Returns:
+        [tuple]: [tuplo con el empleado]
+    """    
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetEmpleadosByID
+            ?,
+            @OutResultCode OUTPUT
+        """,(Id)
+    )
+    empleado = tuple(cursor)
+    cursor.close()
+    return (empleado)
 
 def insertar_empleado_BD(Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimiento):
     """[Insertamos un empleado a la BD]

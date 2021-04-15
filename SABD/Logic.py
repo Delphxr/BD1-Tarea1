@@ -21,11 +21,14 @@ def get_empleados():
     # como recibimos los puestos por el Id, vamos a remplazarlo por el nombre
     for empleado in empleados:
         id_puesto = empleado[5]
-        puesto = DataBaseEmpleados.get_puestos_by_ID(id_puesto)
+        puesto = get_puestos_by_id(id_puesto)[0]
         empleado[5] = puesto[1]
 
     empleados = sorted(empleados, key=lower_getter(1)) #ordenamos en orden alfabetico
     return empleados
+
+def get_empleados_by_id(Id):
+    return DataBaseEmpleados.get_empleados_by_ID(Id)
 
 def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
     """[insertamos un elemento a la tabla de empleados de la base de datos]
@@ -64,6 +67,9 @@ def get_puestos():
     puestos = DataBaseEmpleados.get_puestos_BD()
     puestos = sorted(puestos, key=lower_getter(1)) #ordenamos en orden alfabetico
     return puestos
+
+def get_puestos_by_id(id):
+    return DataBaseEmpleados.get_puestos_by_ID(id)
 
 def insert_puestos(Nombre, SalarioXHora):
     """[llamamos a la bd para que inserte un puesto con lod parametros recibidos]

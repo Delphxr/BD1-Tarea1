@@ -94,6 +94,24 @@ def editar_puestos():
         return redirect(url_for("login"))
 
 
+#edicion especifica de un empleado
+@app.route("/editar_puesto_especifico/<puesto>", methods=["POST", "GET"])
+def editar_puesto_esp(puesto):
+    if request.method == "POST":
+        editado = request.form["editado"]
+        nombre = request.form["nombre"]
+        salarioXHora = request.form["SalarioXHora"]
+
+        Logic.editar_puestos(editado,nombre,salarioXHora)
+
+        return redirect(url_for("home"))
+    
+    if verificar_sesion():
+        return render_template("editar_puestos.html", puestos=Logic.get_puestos_by_id(puesto))
+    else:
+        return redirect(url_for("login"))
+
+
 #pagina de insertar de puestos
 @app.route("/insertar_puestos/", methods=["POST", "GET"])
 def insertar_puestos():
@@ -193,7 +211,37 @@ def editar_empleados():
         else:
             return redirect(url_for("login")) 
 
+#editar un empleado especifico
+@app.route("/editar_empleados_especifico/<empleado>", methods=["POST", "GET"])
+def editar_empleados_esp(empleado):
+    if request.method == "POST":
+
+        editado = request.form["editado"]
+        nombre = request.form["nombre"]
+        tipodi = request.form["tipodi"]
+        valordi = request.form["valordi"]
+        departamento = request.form["departamento"]
+        puesto = request.form["puesto"]
+        nacimiento = request.form["nacimiento"]
+
+        Logic.editar_empleado(editado,nombre,tipodi,valordi,departamento,puesto,nacimiento)
+        return redirect(url_for("home"))
+    else:
+        if verificar_sesion():
+            return render_template("editar_empleados.html",
+            empleados=Logic.get_empleados_by_id(empleado), 
+            tipos_di=Logic.get_tipos_di(),
+            departamentos=Logic.get_departamentos(),
+            puestos=Logic.get_puestos()
+            )
+
+        else:
+            return redirect(url_for("login")) 
+
 # ---------------------------------------------- #
+
+
+
 
 @app.route("/test/<name>", methods=['GET', 'POST'])
 def test(name):
