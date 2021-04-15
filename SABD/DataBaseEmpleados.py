@@ -22,6 +22,22 @@ def get_puestos_BD():
     cursor.close()
     return (puestos)
 
+def get_puestos_by_ID(Id):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetPuestosByID
+            ?,
+            @OutResultCode OUTPUT
+        """,(Id)
+    )
+    puesto = tuple(cursor)
+    cursor.close()
+    return (puesto[0])
+
 def insertar_puesto_BD(Id,Nombre,SalarioXHora):
     """[Insertamos un puesto a la base de datos]
 
@@ -73,12 +89,12 @@ def insertar_empleado_BD(Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimie
     """[Insertamos un empleado a la BD]
 
     Args:
-        Nombre ([string]): [description]
-        TipoDI ([int]): [description]
-        ValorDI ([string]): [description]
-        Departamento ([int]): [description]
-        Puesto ([int]): [description]
-        FechaNacimiento ([string]): [description]
+        Nombre ([string]): [nombre del empleaso]
+        TipoDI ([int]): [id del tipo de documento identificacion]
+        ValorDI ([string]): [valor del documento de identidad]
+        Departamento ([int]): [id del departamento]
+        Puesto ([int]): [id del puesto]
+        FechaNacimiento ([string]): [fecha de nacimiento en formato AAAA-MM-DD]
     """    
     cursor = conn.cursor()
     cursor.execute(
@@ -99,7 +115,39 @@ def insertar_empleado_BD(Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimie
     )
     conn.commit()
     cursor.close()
-    pass
+
+def editar_empleado_BD(EmpleadoId,Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
+    """[editamos un empleado de la base de datos]
+
+    Args:
+        EmpleadoId ([int]): [id del empleado que vamos a editar]
+        Nombre ([string]): [nombre del empleaso]
+        TipoDI ([int]): [id del tipo de documento identificacion]
+        ValorDI ([string]): [valor del documento de identidad]
+        Departamento ([int]): [id del departamento]
+        Puesto ([int]): [id del puesto]
+        FechaNacimiento ([string]): [fecha de nacimiento en formato AAAA-MM-DD]
+    """    
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.EditarEmpleado
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,
+        (EmpleadoId, Nombre, IdTipoIdentificacion, ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
+    )
+    conn.commit()
+    cursor.close()
 
 # -------------------------------------------- #
 

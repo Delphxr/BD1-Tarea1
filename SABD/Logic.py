@@ -17,11 +17,18 @@ def get_empleados():
         [tuple]: [un iterador con los empleados]
     """    
     empleados = DataBaseEmpleados.get_empleados_BD()
+
+    # como recibimos los puestos por el Id, vamos a remplazarlo por el nombre
+    for empleado in empleados:
+        id_puesto = empleado[5]
+        puesto = DataBaseEmpleados.get_puestos_by_ID(id_puesto)
+        empleado[5] = puesto[1]
+
     empleados = sorted(empleados, key=lower_getter(1)) #ordenamos en orden alfabetico
     return empleados
 
 def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
-    """[insertamos un elemento a la tabla de empleados de la base de dar]
+    """[insertamos un elemento a la tabla de empleados de la base de datos]
 
     Args:
         Nombre ([string]): [nombre del empleado]
@@ -33,6 +40,19 @@ def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, 
     """    
     DataBaseEmpleados.insertar_empleado_BD(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
 
+def editar_empleado(EmpleadoId,Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
+    """[editamos los valores de un empleado en la tabla]
+
+    Args:
+        EmpleadoId ([int]): [id del empleado que vamos a editar]
+        Nombre ([string]): [nombre del empleado]
+        IdTipoIdentificacion ([int]): [identificador del tipo de documento de identificacion, ver la tabla para mas info]
+        ValorDocumentoIdentificacion ([int]): [valor del documento de identificacion]
+        IdDepartamento ([int]): [id del departamenteo en el que trabaja el empleado]
+        Puesto ([string]): [puesto en el que trabaja el empleado]
+        FechaNacimiento ([string]): [fecha de nacimiento del empleado, en formato ano-mes-dia y de la forma = xxxx-xx-xx]
+    """    
+    DataBaseEmpleados.editar_empleado_BD(EmpleadoId,Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
 # -------------------------------------------- #
 
 def get_puestos():

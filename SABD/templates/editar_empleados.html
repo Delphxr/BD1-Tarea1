@@ -33,7 +33,6 @@
                 <div class="col-md-3 mb-3">
                     <label for="validationServer02">Tipo Documento Identificación</label>
                     <select class="form-control form-control" id="validationServer02" name="tipodi" required>
-                        <option value="" selected disabled>{{ empleados[0][2] }}</option>
 
                         {% for tipo_di in tipos_di %}
                         <option value={{tipo_di[0]}}>{{tipo_di[1]}}</option>
@@ -51,7 +50,6 @@
                 <div class="col-md-3 mb-3">
                     <label for="validationServer04">Departamento</label>
                     <select class="form-control form-control" id="validationServer04" name="departamento" required>
-                        <option value="" selected disabled>{{ empleados[0][4] }}</option>
 
                         {% for departamento in departamentos %}
                         <option value={{departamento[0]}}>{{departamento[2]}}</option>
@@ -62,7 +60,6 @@
                 <div class="col-md-3 mb-3">
                     <label for="validationServer05">Puesto</label>
                     <select class="form-control form-control" id="validationServer05" name="puesto" required>
-                        <option value="" selected disabled>{{ empleados[0][5] }}</option>
 
                         {% for puesto in puestos %}
                         <option value={{puesto[0]}}>{{puesto[1]}}</option>

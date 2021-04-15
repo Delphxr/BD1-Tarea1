@@ -57,9 +57,8 @@ def logout():
 
 #pagina principal
 @app.route("/home/")
-def home(dir=""):
+def home():
     if verificar_sesion():
-        print(dir)
         return render_template("homepage.html")
     else:
         return redirect(url_for("login")) 
@@ -162,14 +161,13 @@ def editar_empleados():
 
         editado = request.form["editado"]
         nombre = request.form["nombre"]
-        #tipodi = request.form["tipodi"]
-        tipodi = 8
+        tipodi = request.form["tipodi"]
         valordi = request.form["valordi"]
         departamento = request.form["departamento"]
-        #departamento = 9
         puesto = request.form["puesto"]
         nacimiento = request.form["nacimiento"]
 
+        Logic.editar_empleado(editado,nombre,tipodi,valordi,departamento,puesto,nacimiento)
         return redirect(url_for("home"))
     else:
         if verificar_sesion():
@@ -188,7 +186,7 @@ def editar_empleados():
 
 @app.route("/test/<name>", methods=['GET', 'POST'])
 def test(name):
-    return f"Hello! {name}"
+    return f"Se ha recibido: {name}"
 
 @app.route("/")
 def inicio():
