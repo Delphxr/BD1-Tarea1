@@ -47,17 +47,17 @@ WITH(
 	FechaNacimiento date
     )
  
-DELETE FROM dbo.Usuarios
-DBCC CHECKIDENT ('Usuarios', RESEED, 0)
+DELETE FROM dbo.Administradores
+DBCC CHECKIDENT ('Administradores', RESEED, 0)
 
-INSERT INTO dbo.Usuarios(Username,Nombre,Pasword,tipo)
+INSERT INTO dbo.Administradores(Usuario,Contraseña,Nombre,Tipo)
 SELECT *
 FROM OPENXML (@hdoc, '/Datos/Usuarios/Usuario' , 1)
 WITH(
-    Username VARCHAR(50),
-	Nombre VARCHAR(100),
-	Pasword Password,
-	tipo int
+    	Username VARCHAR(50),
+	Pasword VARCHAR(50),
+	Nombre VARCHAR(50),
+	Tipo int
     )
     
 EXEC sp_xml_removedocument @hdoc
