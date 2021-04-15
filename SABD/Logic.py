@@ -8,17 +8,17 @@ def lower_getter(indice):
         return obj[indice].lower()
     return _getter
 
+# -------------------------------------------- #
 
 def get_empleados():
     """[obtenemos de la base de datos el tuplo con todos los empleados, ordenados alfabeticamente]
 
     Returns:
-        [iterator]: [un iterador con los empleados]
+        [tuple]: [un iterador con los empleados]
     """    
-    empleados = DataBaseEmpleados.read()
+    empleados = DataBaseEmpleados.get_empleados_BD()
     empleados = sorted(empleados, key=lower_getter(1)) #ordenamos en orden alfabetico
     return empleados
-
 
 def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
     """[insertamos un elemento a la tabla de empleados de la base de dar]
@@ -31,14 +31,27 @@ def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, 
         Puesto ([string]): [puesto en el que trabaja el empleado]
         FechaNacimiento ([string]): [fecha de nacimiento del empleado, en formato ano-mes-dia y de la forma = xxxx-xx-xx]
     """    
-    DataBaseEmpleados.insert(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
+    DataBaseEmpleados.insertar_empleado_BD(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
+
+# -------------------------------------------- #
 
 def get_puestos():
+    """[llamamos a la BD para que nos retorne los puestos]
+
+    Returns:
+        [tuple]: [tuplo con los puestos ordenados alfabeticamente]
+    """    
     puestos = DataBaseEmpleados.get_puestos_BD()
     puestos = sorted(puestos, key=lower_getter(1)) #ordenamos en orden alfabetico
     return puestos
 
 def insert_puestos(Nombre, SalarioXHora):
+    """[llamamos a la bd para que inserte un puesto con lod parametros recibidos]
+
+    Args:
+        Nombre ([string]): [nombre del puesto]
+        SalarioXHora ([int]): [cantidad de dinero ganado por hora]
+    """    
     puestos = DataBaseEmpleados.get_puestos_BD()
     Id = 1
     if len(puestos) > 0:
@@ -46,11 +59,23 @@ def insert_puestos(Nombre, SalarioXHora):
         Id = last_touple[0] + 1
     DataBaseEmpleados.insertar_puesto_BD(Id,Nombre,SalarioXHora)
 
+# -------------------------------------------- #
+
 def get_tipos_di():
-    test = ((1,"Cedula Nacional"),(2,"Cedula Residente"),(3,"Prueba con el Logic"))
-    return test
+    """[llamamos a la base de datos y obtenemos los tipos de di]
+
+    Returns:
+        [tuple]: [tuplo con los tipos de di]
+    """    
+    tipos_di = DataBaseEmpleados.get_tipos_di_BD()
+    return tipos_di
 
 def get_departamentos():
-    test = ((1, "Bodega de Materiales"),(2,"Prueba con el Logic"))
-    return test
+    """[llamamos aabase de datos y obtenemos los departamentos]
+
+    Returns:
+        [tuple]: [tuplo con los departamentos en la BD]
+    """    
+    departamentos = DataBaseEmpleados.get_departamentos_BD()
+    return departamentos
 

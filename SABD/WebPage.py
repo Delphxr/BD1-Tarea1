@@ -93,7 +93,7 @@ def insertar_puestos():
         Logic.insert_puestos(nombre,salarioXHora)
 
         return redirect(url_for("home"))
-        
+
     if verificar_sesion():
         return render_template("insertar_puestos.html")
     else:
@@ -136,11 +136,9 @@ def filtrar_empleados():
 def insertar_empleados():
     if request.method == "POST":
         nombre = request.form["nombre"]
-        #tipodi = request.form["tipodi"]
-        tipodi = 8
+        tipodi = request.form["tipodi"]
         valordi = request.form["valordi"]
-        #departamento = request.form["departamento"]
-        departamento = 9
+        departamento = request.form["departamento"]
         puesto = request.form["puesto"]
         nacimiento = request.form["nacimiento"]
 

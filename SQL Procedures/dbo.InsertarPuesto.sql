@@ -1,7 +1,7 @@
 CREATE PROCEDURE dbo.InsertarPuesto
 	-- parametros de entrada
 	@inId INT
-	, @inNombre NCHAR(50)
+	, @inNombre VARCHAR(50)
 	, @inSalarioXHora MONEY	
 	-- parametros de salida
 	, @OutResultCode INT OUTPUT
