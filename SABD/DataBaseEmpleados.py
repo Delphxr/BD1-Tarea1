@@ -248,6 +248,21 @@ def get_tipos_di_BD():
     cursor.close()
     return (tipos_di)
 
+def get_administradores_BD():
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetAdministradores
+            @OutResultCode OUTPUT
+        """
+    )
+    administradores = tuple(cursor)
+    cursor.close()
+    return (administradores)
+
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

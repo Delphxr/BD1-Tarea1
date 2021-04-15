@@ -108,3 +108,5 @@ def get_departamentos():
     departamentos = DataBaseEmpleados.get_departamentos_BD()
     return departamentos
 
+def get_administradores():
+    return DataBaseEmpleados.get_administradores_BD()

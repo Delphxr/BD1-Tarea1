@@ -29,13 +29,14 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if username == "admin" and password == "1234":  # el usuario y la contraseña
-            session["user"] = username
-            session["password"] = password
-            return redirect(url_for("home"))
+        usuarios = Logic.get_administradores() #obtenemos los usuarios de la BD
 
-        else:
-            return render_template("login.html")
+        for usuario in usuarios:
+            if usuario[0] == username and usuario[1] == password:
+                session["user"] = username
+                session["password"] = password
+                return redirect(url_for("home"))
+        return render_template("login.html")
     else:
         if "user" in session:
             return redirect(url_for("home"))
