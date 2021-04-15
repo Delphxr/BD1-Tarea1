@@ -79,6 +79,9 @@ def insert_puestos(Nombre, SalarioXHora):
         Id = last_touple[0] + 1
     DataBaseEmpleados.insertar_puesto_BD(Id,Nombre,SalarioXHora)
 
+def editar_puestos(PuestoId,Nombre, SalarioXHora):
+    DataBaseEmpleados.editar_puesto_BD(PuestoId,Nombre, SalarioXHora)
+
 # -------------------------------------------- #
 
 def get_tipos_di():
