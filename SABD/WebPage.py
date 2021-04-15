@@ -1,8 +1,6 @@
 #pip install flask
 from flask import Flask, redirect, url_for, render_template, request, session, flash
 
-#pip install flask-sqlalchemy
-import sqlalchemy
 
 #encargado de comunicar entre el front end y la BD
 import Logic
@@ -86,8 +84,16 @@ def editar_puestos():
 
 
 #pagina de insertar de puestos
-@app.route("/insertar_puestos/")
+@app.route("/insertar_puestos/", methods=["POST", "GET"])
 def insertar_puestos():
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        salarioXHora = request.form["SalarioXHora"]
+
+        Logic.insert_puestos(nombre,salarioXHora)
+
+        return redirect(url_for("home"))
+        
     if verificar_sesion():
         return render_template("insertar_puestos.html")
     else:

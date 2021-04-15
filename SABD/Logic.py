@@ -34,9 +34,17 @@ def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, 
     DataBaseEmpleados.insert(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
 
 def get_puestos():
-    test = ((1,"Electricista",1200),(2,"prueba del Logic",1250))
-    test = sorted(test, key=lower_getter(1)) #ordenamos en orden alfabetico
-    return test
+    puestos = DataBaseEmpleados.get_puestos_BD()
+    puestos = sorted(puestos, key=lower_getter(1)) #ordenamos en orden alfabetico
+    return puestos
+
+def insert_puestos(Nombre, SalarioXHora):
+    puestos = DataBaseEmpleados.get_puestos_BD()
+    Id = 1
+    if len(puestos) > 0:
+        last_touple = puestos[-1] #obtenemos el ultimo elemento que hay en los puestos, se supone que los IDs estan en orden ascendente y ordenados
+        Id = last_touple[0] + 1
+    DataBaseEmpleados.insertar_puesto_BD(Id,Nombre,SalarioXHora)
 
 def get_tipos_di():
     test = ((1,"Cedula Nacional"),(2,"Cedula Residente"),(3,"Prueba con el Logic"))

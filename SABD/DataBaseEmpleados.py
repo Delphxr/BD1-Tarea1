@@ -2,6 +2,40 @@
 import pyodbc
 
 
+def get_puestos_BD():
+    """[Ejecutamos el stored procedure para obtener los puestos]
+
+    Returns:
+        [touple]: [tuplo con todos los puestos en la BD]
+    """    
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetPuestos
+            @OutResultCode OUTPUT
+        """
+    )
+    return (tuple(cursor))
+
+def insertar_puesto_BD(Id,Nombre,SalarioXHora):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.InsertarPuesto
+            ?,
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,
+        (Id,Nombre,SalarioXHora)
+    )
+
 def read():
     print("read")
     cursor = conn.cursor()
@@ -46,7 +80,7 @@ def delete():
 conn = pyodbc.connect(
     "Driver={SQL Server};"
     "Server=OSWALDO\SQLEXPRESS;"
-    "Database=Prueba1;"
+    "Database=PlanillaObrera_BD;"
     "Trusted_Connection=yes;"
 )
 
