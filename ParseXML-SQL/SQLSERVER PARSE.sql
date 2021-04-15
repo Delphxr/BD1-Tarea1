@@ -19,7 +19,8 @@ FROM OPENXML (@hdoc, '/Datos/Puestos/Puesto' , 1)
 WITH(
 	Id int,
     Nombre VARCHAR(50),
-	SalarioXHora money
+	SalarioXHora money,
+	Visible bit
     )
 
 INSERT INTO dbo.Departamentos
@@ -35,7 +36,7 @@ WITH(
 DELETE FROM dbo.Empleados
 DBCC CHECKIDENT ('Empleados', RESEED, 0)
 
-INSERT INTO dbo.Empleados(Nombre,IdTipoIdentificacion,ValorDocumentoIdentificacion,IdDepartamento,IdPuesto,FechaNacimiento)
+INSERT INTO dbo.Empleados(Nombre,IdTipoIdentificacion,ValorDocumentoIdentificacion,IdDepartamento,IdPuesto,FechaNacimiento,Visible)
 SELECT *
 FROM OPENXML (@hdoc, '/Datos/Empleados/Empleado' , 1)
 WITH(
@@ -44,12 +45,10 @@ WITH(
 	ValorDocumentoIdentificacion VARCHAR(10),
 	IdDepartamento int,
 	IdPuesto int,
-	FechaNacimiento date
+	FechaNacimiento date,
+	Visible bit
     )
  
-DELETE FROM dbo.Administradores
-DBCC CHECKIDENT ('Administradores', RESEED, 0)
-
 INSERT INTO dbo.Administradores(Usuario,Contraseña,Nombre,Tipo)
 SELECT *
 FROM OPENXML (@hdoc, '/Datos/Usuarios/Usuario' , 1)
