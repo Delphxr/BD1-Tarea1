@@ -96,7 +96,7 @@
 </Empleados>
 
 <Usuarios>
-    <Usuario username="Goku" pwd="1234" nombre="ssss" tipo="1"/>
-    <Usuario username="Willy" pwd="1234" nombre="ssss" tipo="1"/>
+    <Usuario username="Goku" pwd="1234" tipo="1"/>
+    <Usuario username="Willy" pwd="1234" tipo="1"/>
 </Usuarios>
 </Datos>
