@@ -73,6 +73,7 @@ def home():
     else:
         return redirect(url_for("login")) 
 
+#pagina de ajustes
 @app.route("/settings/",methods=["POST", "GET"])
 def ajustes():
     if request.method == "POST":
@@ -85,8 +86,14 @@ def ajustes():
             if file_ext not in app.config['UPLOAD_EXTENSIONS']:
                 flash("Archivo no valido", "error")
                 redirect(url_for("ajustes")) 
-
-            uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+            
+            p = os.path.join(app.config['UPLOAD_PATH'], filename)
+            num = 2
+            #verificamos que no haya un archivo con el mismo nombre, si no lo modificamos
+            while os.path.exists(p):
+                filename = str(num) + filename
+                p = os.path.join(app.config['UPLOAD_PATH'], filename)
+            uploaded_file.save(p) #guardamos el archivo
     
     if verificar_sesion():
         return render_template("ajustes.html")
