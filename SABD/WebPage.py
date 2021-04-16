@@ -91,9 +91,13 @@ def ajustes():
             num = 2
             #verificamos que no haya un archivo con el mismo nombre, si no lo modificamos
             while os.path.exists(p):
-                filename = str(num) + filename
-                p = os.path.join(app.config['UPLOAD_PATH'], filename)
+                newfilename = str(num) + filename
+                p = os.path.join(app.config['UPLOAD_PATH'], newfilename)
+                num += 1
             uploaded_file.save(p) #guardamos el archivo
+            
+            #obtenemos la ruta del archivo en el directorio
+            ruta_del_archivo = os.path.dirname(os.path.realpath(__file__)) + "\\" + p
     
     if verificar_sesion():
         return render_template("ajustes.html")
