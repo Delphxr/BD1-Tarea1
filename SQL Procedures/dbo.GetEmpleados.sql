@@ -15,6 +15,7 @@ BEGIN
 			  ,[IdDepartamento]
 			  ,[IdPuesto]
 			  ,[FechaNacimiento]
+			  ,[Visible]
 		FROM [dbo].[Empleados]
 	END TRY
 	BEGIN CATCH

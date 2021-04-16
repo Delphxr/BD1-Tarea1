@@ -20,6 +20,7 @@ BEGIN
 		SELECT [ID]
 			,[Nombre]
 			,[SalarioXHora]
+			,[Visible]
 		FROM [dbo].[Puestos] WHERE ID=@InPuestoId
 	END TRY
 	BEGIN CATCH

@@ -2,7 +2,8 @@ CREATE PROCEDURE dbo.InsertarPuesto
 	-- parametros de entrada
 	@inId INT
 	, @inNombre VARCHAR(50)
-	, @inSalarioXHora MONEY	
+	, @inSalarioXHora MONEY
+	, @inVisible BIT
 	-- parametros de salida
 	, @OutResultCode INT OUTPUT
 	
@@ -15,11 +16,13 @@ BEGIN
 		INSERT INTO [dbo].[Puestos]
 			   ([ID]
 			   ,[Nombre]
-			   ,[SalarioXHora])
+			   ,[SalarioXHora]
+			   ,[Visible])
 		 VALUES
 			   (@inId
 			   ,@inNombre
-			   ,@inSalarioXHora)
+			   ,@inSalarioXHora
+			   ,@inVisible)
 	END TRY
 	BEGIN CATCH
 		Set @OutResultCode=50005; -- error de ejecucion

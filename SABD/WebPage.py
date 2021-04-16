@@ -129,6 +129,17 @@ def insertar_puestos():
     else:
         return redirect(url_for("login"))
 
+
+@app.route("/ocultar_puesto/<puesto>", methods=["POST", "GET"])
+def ocultar_puesto(puesto):
+    if verificar_sesion():
+        borrado = Logic.ocultar_puesto(puesto)
+        if borrado == False:
+            flash("Hay empleados que poseen ese puesto!", "error")
+        return redirect(url_for("listar_puestos"))
+    else:
+        return redirect(url_for("login"))
+
 # ---------------------------------------------- #
 
 #pagina de listar empleados
@@ -238,6 +249,16 @@ def editar_empleados_esp(empleado):
 
         else:
             return redirect(url_for("login")) 
+
+
+@app.route("/ocultar_empleado/<empleado>/<origen>", methods=["POST", "GET"])
+def ocultar_empleado(empleado,origen):
+    if verificar_sesion():
+        Logic.ocultar_empleado(empleado)
+        return redirect(url_for(origen))
+    else:
+        return redirect(url_for("login"))
+
 
 # ---------------------------------------------- #
 

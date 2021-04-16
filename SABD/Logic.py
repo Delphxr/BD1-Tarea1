@@ -43,6 +43,9 @@ def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, 
     """    
     DataBaseEmpleados.insertar_empleado_BD(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento)
 
+def ocultar_empleado(Id):
+    DataBaseEmpleados.cambiar_visibilidad_empleado_BD(Id,False)
+
 def editar_empleado(EmpleadoId,Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
     """[editamos los valores de un empleado en la tabla]
 
@@ -84,6 +87,27 @@ def insert_puestos(Nombre, SalarioXHora):
         last_touple = puestos[-1] #obtenemos el ultimo elemento que hay en los puestos, se supone que los IDs estan en orden ascendente y ordenados
         Id = last_touple[0] + 1
     DataBaseEmpleados.insertar_puesto_BD(Id,Nombre,SalarioXHora)
+
+def ocultar_puesto(Id):
+    """[ocultamos un puesto de la BD]
+
+    Args:
+        Id ([int]): [Id del puesto a ocultar]
+
+    Returns:
+        [bool]: [True si se pudo borrar y false si no se pudo]
+    """    
+    puede_borrar = True
+    empleados = get_empleados()
+    puesto = get_puestos_by_id(Id)[0][1] #nombre del puesto que vamos a ocultar
+
+    for empleado in empleados:
+        if empleado[5] == puesto and empleado[7] == True: #si un empleado posee el puesto, y es visible, no podemos borrar
+            puede_borrar = False
+
+    if puede_borrar == True:
+        DataBaseEmpleados.cambiar_visibilidad_puesto_BD(Id,False)
+    return puede_borrar
 
 def editar_puestos(PuestoId,Nombre, SalarioXHora):
     DataBaseEmpleados.editar_puesto_BD(PuestoId,Nombre, SalarioXHora)

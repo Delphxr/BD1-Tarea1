@@ -11,6 +11,7 @@ BEGIN
 		SELECT [ID]
 			,[Nombre]
 			,[SalarioXHora]
+			,[Visible]
 		FROM [dbo].[Puestos]
 	END TRY
 	BEGIN CATCH

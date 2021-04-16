@@ -17,7 +17,9 @@
                     <label for="validationServer02">Puesto a Editar:</label>
                     <select class="form-control form-control" name="editado" id="validationServer02" required>
                         {% for puesto in puestos %}
+                        {% if puesto[3] == True %}
                         <option value={{puesto[0]}}>{{puesto[1]}}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>

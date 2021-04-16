@@ -23,6 +23,7 @@ BEGIN
 			  ,[IdDepartamento]
 			  ,[IdPuesto]
 			  ,[FechaNacimiento]
+			  ,[Visible]
 		FROM [dbo].[Empleados] WHERE ID=@InEmpleadoId
 	END TRY
 	BEGIN CATCH

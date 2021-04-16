@@ -6,6 +6,7 @@ CREATE PROCEDURE dbo.InsertarEmpleado
 	, @inDepartamentoId INT
 	, @inPuestoId INT
 	, @inFechaNacimiento DATE
+	, @inVisible BIT
 	-- parametros de salida
 	, @OutResultCode INT OUTPUT
 	
@@ -44,14 +45,16 @@ BEGIN
            ,[ValorDocumentoIdentificacion]
            ,[IdDepartamento]
            ,[IdPuesto]
-           ,[FechaNacimiento])
+           ,[FechaNacimiento]
+		   ,[Visible])
 		VALUES
            (@inNombre
            ,@inTipoIdentidicacionId
            ,@inValorDocumentoIdentificacion
            ,@inDepartamentoId
            ,@inPuestoId
-           ,@inFechaNacimiento)
+           ,@inFechaNacimiento
+		   ,@inVisible)
 
 	END TRY
 	BEGIN CATCH

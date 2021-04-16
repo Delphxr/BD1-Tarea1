@@ -64,9 +64,33 @@ def insertar_puesto_BD(Id,Nombre,SalarioXHora):
             ?,
             ?,
             ?,
+            ?,
             @OutResultCode OUTPUT
         """,
-        (Id,Nombre,SalarioXHora)
+        (Id,Nombre,SalarioXHora,True)
+    )
+    conn.commit()
+    cursor.close()
+
+def cambiar_visibilidad_puesto_BD(Id, value):
+    """[ocultamos un puesto cambiando el bit de visibilidad]
+
+    Args:
+        Id ([int]): [Id del puesto que vamos a ocultar]
+        value ([bool]): [True si se va a mostrar, False si se va a ocultar]
+    """    
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.OcultarPuesto
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,
+        (Id,value)
     )
     conn.commit()
     cursor.close()
@@ -166,9 +190,27 @@ def insertar_empleado_BD(Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimie
             ?,
             ?,
             ?,
+            ?,
             @OutResultCode OUTPUT
         """,
-        (Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimiento)
+        (Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimiento,True)
+    )
+    conn.commit()
+    cursor.close()
+
+def cambiar_visibilidad_empleado_BD(Id, value):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.OcultarEmpleado
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,
+        (Id,value)
     )
     conn.commit()
     cursor.close()

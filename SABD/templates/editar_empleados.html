@@ -19,7 +19,9 @@
                     <select class="form-control form-control" name="editado" id="validationServer02" name="tipodi"
                         required>
                         {% for empleado in empleados %}
+                        {% if empleado[7] == True %}
                         <option value={{empleado[0]}}>{{empleado[1]}}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -62,7 +64,9 @@
                     <select class="form-control form-control" id="validationServer05" name="puesto" required>
 
                         {% for puesto in puestos %}
+                        {% if puesto[3] == True %}
                         <option value={{puesto[0]}}>{{puesto[1]}}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
