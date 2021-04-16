@@ -307,7 +307,18 @@ def get_administradores_BD():
 
 # -------------------------------------------- #
 
-
+def cargar_xml_BD(ruta):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+ 
+        EXEC dbo.CargarXML
+            ?
+        """,
+        (ruta)
+    )
+    conn.commit()
+    cursor.close()
 
 # -------------------------------------------- #
 

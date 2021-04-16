@@ -8,9 +8,9 @@
     <TipoDocuIdentidad Id="6" Nombre="Cedula Extranjera"/>
   </Tipos_de_Documento_de_Identidad>
   <Puestos>
-    <Puesto Id="1" Nombre="Electricista" SalarioXHora="1200" Visible="0"/>
-    <Puesto Id="2" Nombre="Auxiliar de Laboratorio" SalarioXHora="1250" Visible="0"/>
-    <Puesto Id="3" Nombre="Operador de Maquina" SalarioXHora="1025" Visible="0"/>
+    <Puesto Id="1" Nombre="Electricista" SalarioXHora="1200" Visible="1"/>
+    <Puesto Id="2" Nombre="Auxiliar de Laboratorio" SalarioXHora="1250" Visible="1"/>
+    <Puesto Id="3" Nombre="Operador de Maquina" SalarioXHora="1025" Visible="1"/>
   </Puestos>
   <Departamentos>
     <Departamento Id="1" IdJefe="1" Nombre="Enlaminado"/>
@@ -26,7 +26,7 @@
         IdDepartamento="2"
         IdPuesto="1"
         FechaNacimiento="1998-05-10"
-        Visible="0"
+        Visible="1"
   />
     <Empleado
         Nombre="Roberto Aldecoba"
@@ -35,7 +35,7 @@
         IdDepartamento="3"
         IdPuesto="3"
         FechaNacimiento="1985-08-21"
-        Visible="0"
+        Visible="1"
   />
     <Empleado
         Nombre="Jenaro Murillo"
@@ -44,7 +44,7 @@
         IdDepartamento="2"
         IdPuesto="2"
         FechaNacimiento="2000-08-29"
-        Visible="0"
+        Visible="1"
   />
   </Empleados>
   <Usuarios>

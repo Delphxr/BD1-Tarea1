@@ -137,3 +137,6 @@ def get_administradores():
 
 def clear_bd():
     pass
+
+def cargar_xml(ruta):
+    DataBaseEmpleados.cargar_xml_BD(ruta)

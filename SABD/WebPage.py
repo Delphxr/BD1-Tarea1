@@ -98,6 +98,9 @@ def ajustes():
             
             #obtenemos la ruta del archivo en el directorio
             ruta_del_archivo = os.path.dirname(os.path.realpath(__file__)) + "\\" + p
+            ruta_del_archivo = str(ruta_del_archivo)
+            #print(ruta_del_archivo)
+            Logic.cargar_xml(ruta_del_archivo) 
     
     if verificar_sesion():
         return render_template("ajustes.html")
