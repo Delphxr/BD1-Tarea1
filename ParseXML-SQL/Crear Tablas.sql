@@ -97,7 +97,6 @@ GO
 CREATE TABLE dbo.Departamentos
 	(
 	ID int NOT NULL,
-	IdJefe int NOT NULL,
 	Nombre varchar(50) NOT NULL
 	)  ON [PRIMARY]
 GO
@@ -129,7 +128,6 @@ CREATE TABLE dbo.Administradores
 	(
 	Usuario varchar(50) NOT NULL,
 	Contrasena varchar(50) NOT NULL,
-	Nombre varchar(50) NOT NULL,
 	Tipo int NOT NULL
 	)  ON [PRIMARY]
 GO
