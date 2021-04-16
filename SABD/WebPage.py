@@ -78,29 +78,35 @@ def home():
 def ajustes():
     if request.method == "POST":
 
-        uploaded_file = request.files['xml']
+        if "delete" in request.form:
+            Logic.clear_bd()
+            print("a")
+        else:
 
-        filename = secure_filename(uploaded_file.filename)
-        if filename != '':
-            file_ext = os.path.splitext(filename)[1]
-            if file_ext not in app.config['UPLOAD_EXTENSIONS']:
-                flash("Archivo no valido", "error")
-                redirect(url_for("ajustes")) 
-            
-            p = os.path.join(app.config['UPLOAD_PATH'], filename)
-            num = 2
-            #verificamos que no haya un archivo con el mismo nombre, si no lo modificamos
-            while os.path.exists(p):
-                newfilename = str(num) + filename
-                p = os.path.join(app.config['UPLOAD_PATH'], newfilename)
-                num += 1
-            uploaded_file.save(p) #guardamos el archivo
-            
-            #obtenemos la ruta del archivo en el directorio
-            ruta_del_archivo = os.path.dirname(os.path.realpath(__file__)) + "\\" + p
-            ruta_del_archivo = str(ruta_del_archivo)
-            #print(ruta_del_archivo)
-            Logic.cargar_xml(ruta_del_archivo) 
+            uploaded_file = request.files['xml']
+
+            filename = secure_filename(uploaded_file.filename)
+            if filename != '':
+                file_ext = os.path.splitext(filename)[1]
+                if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+                    flash("Archivo no valido", "error")
+                    redirect(url_for("ajustes")) 
+                
+                p = os.path.join(app.config['UPLOAD_PATH'], filename)
+                num = 2
+                #verificamos que no haya un archivo con el mismo nombre, si no lo modificamos
+                while os.path.exists(p):
+                    newfilename = str(num) + filename
+                    p = os.path.join(app.config['UPLOAD_PATH'], newfilename)
+                    num += 1
+                uploaded_file.save(p) #guardamos el archivo
+                
+                #obtenemos la ruta del archivo en el directorio
+                ruta_del_archivo = os.path.dirname(os.path.realpath(__file__)) + "\\" + p
+                ruta_del_archivo = str(ruta_del_archivo)
+                #print(ruta_del_archivo)
+                Logic.cargar_xml(ruta_del_archivo)
+                flash("Se ha cargado correctamente el archivo", "info")
     
     if verificar_sesion():
         return render_template("ajustes.html")

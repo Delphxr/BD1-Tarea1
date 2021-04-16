@@ -136,7 +136,7 @@ def get_administradores():
     return DataBaseEmpleados.get_administradores_BD()
 
 def clear_bd():
-    pass
+    DataBaseEmpleados.limpiar_tablas()
 
 def cargar_xml(ruta):
     DataBaseEmpleados.cargar_xml_BD(ruta)

@@ -6,7 +6,7 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for msg in messages %}
-                <div class="alert alert-dismissible alert-danger">
+                <div class="alert alert-dismissible alert-success">
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                     {{msg}}
                 </div>
@@ -43,7 +43,7 @@
 
     <P>
     <h4> Reiniciar Base de Datos</h4>
-    <h6> Limpiamos las tablas de la BD <b>*Ignora la tabla de usuarios*</b></h6>
+    <h6> Limpiamos las tablas de la BD <b>*Ignora al usuario "admin" de la tabla de administradores*</b></h6>
     </P>
     
         <div class="card-body p-15 shadow-lg ">

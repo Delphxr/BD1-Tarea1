@@ -319,6 +319,19 @@ def cargar_xml_BD(ruta):
     )
     conn.commit()
     cursor.close()
+ 
+def limpiar_tablas():
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        EXEC dbo.ReiniciarBD
+            @OutResultCode OUTPUT
+        """
+    )
+    conn.commit()
+    cursor.close()
 
 # -------------------------------------------- #
 
