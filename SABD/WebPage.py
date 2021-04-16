@@ -80,7 +80,6 @@ def ajustes():
 
         if "delete" in request.form:
             Logic.clear_bd()
-            print("a")
         else:
 
             uploaded_file = request.files['xml']

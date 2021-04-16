@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.GetDepartamentos
+CREATE PROCEDURE [dbo].[GetDepartamentos]
 	-- parametros de salida
 	@OutResultCode INT OUTPUT
 
@@ -9,7 +9,6 @@ BEGIN
 		SELECT
 			@OutResultCode=0  -- codigo de ejecucion exitoso
 		SELECT [ID]
-			  ,[IdJefe]
 			  ,[Nombre]
 		FROM [dbo].[Departamentos]
 	END TRY
