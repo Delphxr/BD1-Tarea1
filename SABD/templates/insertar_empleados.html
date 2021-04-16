@@ -53,7 +53,9 @@
                     <select class="form-control form-control" id="validationServer05" name="puesto" required>
 
                         {% for puesto in puestos %}
+                        {% if puesto[3] == True %}
                         <option value={{puesto[0]}}>{{puesto[1]}}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
