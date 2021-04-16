@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.GetAdministradores
+CREATE PROCEDURE [dbo].[GetAdministradores]
 	-- parametros de salida
 	@OutResultCode INT OUTPUT
 
@@ -10,7 +10,6 @@ BEGIN
 			@OutResultCode=0  -- codigo de ejecucion exitoso
 		SELECT [Usuario]
 			  ,[Contrasena]
-			  ,[Nombre]
 			  ,[Tipo]
 		FROM [dbo].[Administradores]
 	END TRY
