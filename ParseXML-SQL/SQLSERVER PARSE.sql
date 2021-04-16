@@ -65,12 +65,12 @@ DELETE FROM dbo.Administradores/*Limpia la tabla Administradores*/
 
 INSERT INTO dbo.Administradores(Usuario,Contraseña,Tipo)/*Inserta en la tabla Administradores*/
 SELECT *
-FROM OPENXML (@hdoc, '/Datos/UsuarioAdministrador/Administrador' , 1)/*Lee los contenidos del XML y para eso necesita un identificador,el PATH del nodo y el 1 que sirve
+FROM OPENXML (@hdoc, '/Datos/Usuarios/Usuario' , 1)/*Lee los contenidos del XML y para eso necesita un identificador,el PATH del nodo y el 1 que sirve
 para retornar solo atributos*/
 WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
     username VARCHAR(50),
 	pwd VARCHAR(50),
-	Tipo int
+	tipo int
     )
     
 EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
