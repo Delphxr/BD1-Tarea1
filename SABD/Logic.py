@@ -134,3 +134,6 @@ def get_departamentos():
 
 def get_administradores():
     return DataBaseEmpleados.get_administradores_BD()
+
+def clear_bd():
+    pass

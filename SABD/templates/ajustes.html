@@ -1,0 +1,73 @@
+{% extends "navbar.html" %}
+{% block title %}Ajustes{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="alert alert-dismissible alert-danger">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{msg}}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+<div class="container">
+
+    <p>
+    <h1>Ajustes </h1>
+    </p>
+    
+
+    <P>
+    <h4> Cargar XML</h4>
+    </P>
+
+    <div class="card-body p-15 shadow-lg ">
+
+        <form action="" method="POST" class="user" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="validationServer01">Archivo</label>
+                <p>
+                    <input input type="file" name="xml" accept=".xml" id="validationServer01" required />
+                </p>
+            </div>
+            <button class="btn btn-primary" type="submit">Cargar</button>
+        </form>
+    </div>
+
+    <br>
+    <br>
+
+    <P>
+    <h4> Reiniciar Base de Datos</h4>
+    <h6> Limpiamos las tablas de la BD <b>*Ignora la tabla de usuarios*</b></h6>
+    </P>
+    
+        <div class="card-body p-15 shadow-lg ">
+    
+            <form action="" method="POST" class="user" enctype="multipart/form-data">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input is-invalid" type="checkbox" value="delete" name="delete" id="invalidCheck3" required>
+                        <label class="form-check-label" for="invalidCheck3">
+                            Confirmar cambios
+                        </label>
+                        <div class="invalid-feedback">
+                            Debe confirmar los cambios a realizar
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-danger" type="submit">Reiniciar</button>
+            </form>
+        </div>
+
+
+</div>
+
+
+
+
+{% endblock %}

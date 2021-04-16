@@ -15,6 +15,11 @@
             <div class="form-row">
                 <div class="col-md-4 mb-3">
                     <label for="validationServer02">Puesto a Editar:</label>
+
+
+                    <label class="form-label" for="customFile">Empleados</label>
+                    <input type="file" class="form-control" id="customFile" />
+
                     <select class="form-control form-control" name="editado" id="validationServer02" required>
                         {% for puesto in puestos %}
                         {% if puesto[3] == True %}

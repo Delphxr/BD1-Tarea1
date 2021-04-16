@@ -1,5 +1,7 @@
 #pip install flask
 from flask import Flask, redirect, url_for, render_template, request, session, flash
+import os
+from werkzeug.utils import secure_filename
 
 
 #encargado de comunicar entre el front end y la BD
@@ -10,6 +12,12 @@ import Logic
 app = Flask(__name__)  # creamos la pagina
 # key para tener los datos de inicio de secion encriptados
 app.secret_key = "c8gd6qlgK4N2*XtLeHa2ykCj!fQrR(a@R)t4TaLee43c$F9&)2w6"
+
+#para que los archivos a subirse mayores a 1Mb no sean recibidos
+#app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+#solo recibimos archivos xml
+app.config['UPLOAD_EXTENSIONS'] = ['.xml']
+app.config['UPLOAD_PATH'] = 'uploads'
 
 # ---------------------------------------------- #
 
@@ -65,7 +73,25 @@ def home():
     else:
         return redirect(url_for("login")) 
 
+@app.route("/settings/",methods=["POST", "GET"])
+def ajustes():
+    if request.method == "POST":
 
+        uploaded_file = request.files['xml']
+
+        filename = secure_filename(uploaded_file.filename)
+        if filename != '':
+            file_ext = os.path.splitext(filename)[1]
+            if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+                flash("Archivo no valido", "error")
+                redirect(url_for("ajustes")) 
+
+            uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+    
+    if verificar_sesion():
+        return render_template("ajustes.html")
+    else:
+        return redirect(url_for("login")) 
 # ---------------------------------------------- #
 
 #pagina de listar puestos

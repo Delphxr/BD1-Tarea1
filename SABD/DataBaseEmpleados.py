@@ -307,6 +307,10 @@ def get_administradores_BD():
 
 # -------------------------------------------- #
 
+
+
+# -------------------------------------------- #
+
 #hacemos una coneccion on la base de datos
 conn = pyodbc.connect(
     "Driver={SQL Server};"
