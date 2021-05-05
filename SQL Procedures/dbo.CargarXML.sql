@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.CargarXML
+CREATE PROCEDURE [dbo].[CargarXML]
     -- Parametro de entrada
     @inRutaXML NVARCHAR(500)
 AS
@@ -7,14 +7,15 @@ DECLARE @Datos xml/*Declaramos la variable Datos como un tipo XML*/
 
 DECLARE @outDatos xml -- parametro de salida del sql dinamico
 
- -- Para cargar el archivo con una variable, CHAR(39) con comillas simples
-DECLARE @Comando NVARCHAR(500)= 'SELECT @Datos = D FROM OPENROWSET (BULK '  + CHAR(39) + @inRutaXML + CHAR(39) + ', SINGLE_BLOB) AS Datos(D)'
+ -- Para cargar el archivo con una variable, CHAR(39) son comillas simples
+DECLARE @Comando NVARCHAR(500)= 'SELECT @Datos = D FROM OPENROWSET (BULK '  + CHAR(39) + @inRutaXML + CHAR(39) + ', SINGLE_BLOB) AS Datos(D)' -- comando que va a ejecutar el sql dinamico
+
 DECLARE @Parametros NVARCHAR(500)
-SET @Parametros = N'@Datos xml OUTPUT'
+SET @Parametros = N'@Datos xml OUTPUT' --parametros del sql dinamico
 
-EXECUTE sp_executesql @Comando, @Parametros, @Datos = @outDatos OUTPUT
+EXECUTE sp_executesql @Comando, @Parametros, @Datos = @outDatos OUTPUT -- ejecutamos el comando que hicimos dinamicamente
 
-SET @Datos = @outDatos
+SET @Datos = @outDatos -- le damos el parametro de salida del sql dinamico a la variable para el resto del procedure
     
 DECLARE @hdoc int /*Creamos hdoc que va a ser un identificador*/
     
