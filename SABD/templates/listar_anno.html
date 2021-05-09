@@ -1,0 +1,81 @@
+{% extends "navbar.html" %}
+{% block title %}Planilla Año{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="hero-unit">
+        <p>
+        <h1>Planilla del ultimo año: </h1>
+        </p>
+
+    </div>
+    <div class="card border-2 shadow-lg my-5">
+        <table class="table table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Mes</th>
+                    <th scope="col">Salario Bruto</th>
+                    <th scope="col">Deducciones</th>
+                    <th scope="col">Salario Neto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for planilla in planillas %}
+                <tr>
+                    <td>{{planilla[0]}}</td>
+                    <td>{{planilla[1]}}</td>
+
+                    <td scope="row">
+                        <a href="" class="text-dark" data-toggle="modal"
+                            data-target="#deduccionesModal">{{planilla[2]}}</a>
+                    </td>
+                    <td>{{planilla[3]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--Este es el menu de ver las deducciones-->
+<div class="modal fade" id="deduccionesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Detalle de Deducciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-hover responsive">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Porcentaje</th>
+                            <th scope="col">Monto</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for planilla in planillas %}
+                        <tr>
+                            <td>{{planilla[1]}}</td>
+                            <td>{{planilla[2]}}</td>
+                            <td>{{planilla[3]}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

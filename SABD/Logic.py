@@ -133,7 +133,12 @@ def get_departamentos():
     return departamentos
 
 def get_administradores():
-    return DataBaseEmpleados.get_administradores_BD()
+    tipo_admin = ["", "Administrador", "Usuario"]
+    administradores = DataBaseEmpleados.get_administradores_BD()
+    for administrador in administradores:
+        administrador[2] = tipo_admin[administrador[2]]
+    
+    return administradores
 
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()

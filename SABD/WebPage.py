@@ -28,6 +28,13 @@ def verificar_sesion():
     else:
         return False
 
+#verificamos si el usuario tiene los permisos necesarios
+def has_permisos():
+    if session["permiso"] == "Administrador":
+        return True
+    else:
+        return False
+
 
 
 # pagina de inicio de sesión
@@ -43,6 +50,7 @@ def login():
             if usuario[0] == username and usuario[1] == password:
                 session["user"] = username
                 session["password"] = password
+                session["permiso"] = usuario[2]
                 return redirect(url_for("home"))
         return render_template("login.html")
     else:
@@ -68,9 +76,8 @@ def logout():
 #pagina principal
 @app.route("/home/")
 def home():
-    flash("No tiene los permisos para realizar esta acción", "info")
-    if verificar_sesion():
-        return render_template("homepage.html")
+    if verificar_sesion(): 
+        return render_template("homepage.html", permiso=session["permiso"])
     else:
         return redirect(url_for("login")) 
 
@@ -108,9 +115,10 @@ def ajustes():
                 Logic.cargar_xml(ruta_del_archivo)
                 flash("Se ha cargado correctamente el archivo", "info")
     
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         return render_template("ajustes.html")
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login")) 
 # ---------------------------------------------- #
 
@@ -135,9 +143,10 @@ def editar_puestos():
 
         return redirect(url_for("home"))
     
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         return render_template("editar_puestos.html", puestos=Logic.get_puestos())
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login"))
 
 
@@ -153,9 +162,10 @@ def editar_puesto_esp(puesto):
 
         return redirect(url_for("home"))
     
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         return render_template("editar_puestos.html", puestos=Logic.get_puestos_by_id(puesto))
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login"))
 
 
@@ -170,20 +180,22 @@ def insertar_puestos():
 
         return redirect(url_for("home"))
 
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         return render_template("insertar_puestos.html")
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login"))
 
 
 @app.route("/ocultar_puesto/<puesto>", methods=["POST", "GET"])
 def ocultar_puesto(puesto):
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         borrado = Logic.ocultar_puesto(puesto)
         if borrado == False:
             flash("Hay empleados que poseen ese puesto!", "error")
         return redirect(url_for("listar_puestos"))
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login"))
 
 # ---------------------------------------------- #
@@ -233,13 +245,14 @@ def insertar_empleados():
 
         return redirect(url_for("home"))
     else:
-        if verificar_sesion():
+        if verificar_sesion() and has_permisos():
             return render_template("insertar_empleados.html",
             tipos_di=Logic.get_tipos_di(),
             departamentos=Logic.get_departamentos(),
             puestos=Logic.get_puestos()
             )
         else:
+            flash("No tiene los permisos para realizar esta acción", "info")
             return redirect(url_for("login")) 
 
 #editar un empleado
@@ -258,7 +271,7 @@ def editar_empleados():
         Logic.editar_empleado(editado,nombre,tipodi,valordi,departamento,puesto,nacimiento)
         return redirect(url_for("home"))
     else:
-        if verificar_sesion():
+        if verificar_sesion() and has_permisos():
             return render_template("editar_empleados.html",
             empleados=Logic.get_empleados(), 
             tipos_di=Logic.get_tipos_di(),
@@ -267,6 +280,7 @@ def editar_empleados():
             )
 
         else:
+            flash("No tiene los permisos para realizar esta acción", "info")
             return redirect(url_for("login")) 
 
 #editar un empleado especifico
@@ -285,7 +299,7 @@ def editar_empleados_esp(empleado):
         Logic.editar_empleado(editado,nombre,tipodi,valordi,departamento,puesto,nacimiento)
         return redirect(url_for("home"))
     else:
-        if verificar_sesion():
+        if verificar_sesion() and has_permisos():
             return render_template("editar_empleados.html",
             empleados=Logic.get_empleados_by_id(empleado), 
             tipos_di=Logic.get_tipos_di(),
@@ -294,26 +308,36 @@ def editar_empleados_esp(empleado):
             )
 
         else:
+            flash("No tiene los permisos para realizar esta acción", "info")
             return redirect(url_for("login")) 
 
 
 @app.route("/ocultar_empleado/<empleado>/<origen>", methods=["POST", "GET"])
 def ocultar_empleado(empleado,origen):
-    if verificar_sesion():
+    if verificar_sesion() and has_permisos():
         Logic.ocultar_empleado(empleado)
         return redirect(url_for(origen))
     else:
+        flash("No tiene los permisos para realizar esta acción", "info")
         return redirect(url_for("login"))
 
 
 
 # ---------------------------------------------- #
 
-#pagina de listar empleados
+#pagina de planilla semanal
 @app.route("/listar_semana_planilla/")
 def listar_semana_planilla():
     if verificar_sesion():
         return render_template("listar_semana.html", planillas=[("hola","hola","hola","hola","hola","hola","hola")])
+    else:
+        return redirect(url_for("login")) 
+
+#pagina de planilla año
+@app.route("/listar_anno_planilla/")
+def listar_anno_planilla():
+    if verificar_sesion():
+        return render_template("listar_anno.html", planillas=[("hola","hola","hola","hola","hola","hola","hola")])
     else:
         return redirect(url_for("login")) 
 
