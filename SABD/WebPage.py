@@ -68,6 +68,7 @@ def logout():
 #pagina principal
 @app.route("/home/")
 def home():
+    flash("No tiene los permisos para realizar esta acción", "info")
     if verificar_sesion():
         return render_template("homepage.html")
     else:
@@ -303,6 +304,18 @@ def ocultar_empleado(empleado,origen):
         return redirect(url_for(origen))
     else:
         return redirect(url_for("login"))
+
+
+
+# ---------------------------------------------- #
+
+#pagina de listar empleados
+@app.route("/listar_semana_planilla/")
+def listar_semana_planilla():
+    if verificar_sesion():
+        return render_template("listar_semana.html", planillas=[("hola","hola","hola","hola","hola","hola","hola")])
+    else:
+        return redirect(url_for("login")) 
 
 
 # ---------------------------------------------- #

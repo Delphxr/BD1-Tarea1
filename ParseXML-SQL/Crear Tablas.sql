@@ -165,7 +165,7 @@ CREATE TABLE dbo.Empleados
 	IdDepartamento int NOT NULL,
 	IdPuesto int NOT NULL,
 	FechaNacimiento date NOT NULL,
-	[Visible|] bit NOT NULL
+	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
 ALTER TABLE dbo.Empleados ADD CONSTRAINT
@@ -341,7 +341,7 @@ GO
 CREATE TABLE dbo.Administradores
 	(
 	Usuario varchar(50) NOT NULL,
-	Contraseña varchar(50) NOT NULL,
+	Contrasena varchar(50) NOT NULL,
 	Tipo int NOT NULL
 	)  ON [PRIMARY]
 GO

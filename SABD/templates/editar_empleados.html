@@ -16,7 +16,7 @@
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer02">Empleado a Editar:</label>
-                    <select class="form-control form-control" name="editado" id="validationServer02" name="tipodi"
+                    <select class="form-control form-control" name="editado" id="validationServer02" name="tipodi" style="height:40px;"
                         required>
                         {% for empleado in empleados %}
                         {% if empleado[7] == True %}
@@ -28,13 +28,13 @@
 
                 <div class="col-md-6 mb-3">
                     <label for="validationServer01">Nombre</label>
-                    <input type="text" class="form-control" name="nombre" id="validationServer01"
+                    <input type="text" class="form-control" name="nombre" id="validationServer01" style="height:40px;"
                         placeholder="{% if empleados|length > 0 %}{{empleados[0][1]}}{% else %}Juanito Valderrama{% endif %}" required>
 
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="validationServer02">Tipo Documento Identificación</label>
-                    <select class="form-control form-control" id="validationServer02" name="tipodi" required>
+                    <select class="form-control form-control" id="validationServer02" name="tipodi" style="height:40px;" required>
 
                         {% for tipo_di in tipos_di %}
                         <option value={{tipo_di[0]}}>{{tipo_di[1]}}</option>
@@ -44,14 +44,14 @@
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer03">Valor Documento Identificación</label>
-                    <input type="number" class="form-control" min="0" id="validationServer03" name="valordi"
+                    <input type="number" class="form-control" min="0" id="validationServer03" name="valordi" style="height:40px;"
                         placeholder="{% if empleados|length > 0 %}{{empleados[0][3]}}{% else %}402350321{% endif %}" required>
 
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer04">Departamento</label>
-                    <select class="form-control form-control" id="validationServer04" name="departamento" required>
+                    <select class="form-control form-control" id="validationServer04" name="departamento" style="height:40px;" required> 
 
                         {% for departamento in departamentos %}
                         <option value={{departamento[0]}}>{{departamento[1]}}</option>
@@ -61,7 +61,7 @@
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer05">Puesto</label>
-                    <select class="form-control form-control" id="validationServer05" name="puesto" required>
+                    <select class="form-control form-control" id="validationServer05" name="puesto" style="height:40px;" required>
 
                         {% for puesto in puestos %}
                         {% if puesto[3] == True %}
@@ -73,7 +73,7 @@
 
                 <div class="col-md-3 mb-3">
                     <label for="validationServer06">Fecha Nacimiento</label>
-                    <input type="date" class="form-control" name="nacimiento" id="validationServer06"
+                    <input type="date" class="form-control" name="nacimiento" id="validationServer06" style="height:40px;"
                          value="{% if empleados|length > 0 %}{{empleados[0][6]}}{% else %}1998-05-10{% endif %}" required>
 
                 </div>
@@ -81,7 +81,7 @@
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input class="form-check-input is-invalid" type="checkbox" value="" id="invalidCheck3" required>
+                    <input class="form-check-input is-invalid" type="checkbox" value="" id="invalidCheck3" style="height:40px;" required>
                     <label class="form-check-label" for="invalidCheck3">
                         Confirmar cambios
                     </label>
