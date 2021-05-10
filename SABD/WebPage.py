@@ -2,7 +2,7 @@
 from flask import Flask, redirect, url_for, render_template, request, session, flash
 import os
 from werkzeug.utils import secure_filename
-
+ 
 
 #encargado de comunicar entre el front end y la BD
 import Logic
@@ -329,7 +329,10 @@ def ocultar_empleado(empleado,origen):
 @app.route("/listar_semana_planilla/")
 def listar_semana_planilla():
     if verificar_sesion():
-        return render_template("listar_semana.html", planillas=[("hola","hola","hola","hola","hola","hola","hola")])
+        return render_template("listar_semana.html",
+                                planillas=[(0,"uno","dos","tres","cuatro","cinco","seis"),(1,"hola","hola","hola","hola","hola","hola")],
+                                detalles_salario=[[["Lunes","papa","papa","papa","papa","papa","papa"],["Martes","papa","papa","papa","papa","papa","papa"]],[["Lunes","chayote","chayote","chayote","chayote","chayote","papa"],["Miercoles","chayote","chayote","chayote","chayote","chayote","papa"]]],
+                                deducciones=[[["Caja","15","3200"],["Salud","46","35000"]],[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
         return redirect(url_for("login")) 
 
@@ -337,7 +340,7 @@ def listar_semana_planilla():
 @app.route("/listar_anno_planilla/")
 def listar_anno_planilla():
     if verificar_sesion():
-        return render_template("listar_anno.html", planillas=[("hola","hola","hola","hola","hola","hola","hola")])
+        return render_template("listar_anno.html", planillas=[(0,"hola","hola","hola","fin")], deducciones=[[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
         return redirect(url_for("login")) 
 

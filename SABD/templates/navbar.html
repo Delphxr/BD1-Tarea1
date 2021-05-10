@@ -5,6 +5,7 @@
     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <link href={{url_for('static', filename='ThemeF.css')}} rel="stylesheet" type="text/css">
   <title>{% block title %} {% endblock %}</title>
+  {% block code %} {% endblock %}
 </head>
 
 <body>
@@ -52,7 +53,7 @@
             Planillas
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="{{url_for('listar_semana_planilla')}}">Ultima Semana</a>
+            <a class="dropdown-item" href="{{url_for('listar_semana_planilla')}}">Ultimas 15 Semanas</a>
             <a class="dropdown-item" href="{{url_for('listar_anno_planilla')}}">Ultimo Año</a>          
           </div>
         </li>

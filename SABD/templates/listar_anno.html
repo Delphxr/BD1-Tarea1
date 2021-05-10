@@ -1,5 +1,6 @@
 {% extends "navbar.html" %}
 {% block title %}Planilla Año{% endblock %}
+{% block code %} <script defer src={{url_for('static', filename='ActualizarAnno.js')}}></script> {% endblock %}
 {% block content %}
 <div class="container">
     <div class="hero-unit">
@@ -21,14 +22,14 @@
             <tbody>
                 {% for planilla in planillas %}
                 <tr>
-                    <td>{{planilla[0]}}</td>
                     <td>{{planilla[1]}}</td>
+                    <td>{{planilla[2]}}</td>
 
                     <td scope="row">
-                        <a href="" class="text-dark" data-toggle="modal"
-                            data-target="#deduccionesModal">{{planilla[2]}}</a>
+                        <a href="" class="text-dark boton_deduccion" data-button="{{deducciones[planilla[0]]}}" data-toggle="modal"
+                            data-target="#deduccionesModal">{{planilla[3]}}</a>
                     </td>
-                    <td>{{planilla[3]}}</td>
+                    <td>{{planilla[4]}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -57,14 +58,8 @@
 
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for planilla in planillas %}
-                        <tr>
-                            <td>{{planilla[1]}}</td>
-                            <td>{{planilla[2]}}</td>
-                            <td>{{planilla[3]}}</td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id=tabla_popuot_detalles_deducciones>
+                        
                     </tbody>
                 </table>
 

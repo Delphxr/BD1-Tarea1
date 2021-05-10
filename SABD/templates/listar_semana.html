@@ -1,5 +1,6 @@
 {% extends "navbar.html" %}
-{% block title %}Planilla Semana{% endblock %}
+{% block title %}Planilla Semana{% endblock %} 
+{% block code %} <script defer src={{url_for('static', filename='ActualizarSemana.js')}}></script> {% endblock %}
 {% block content %}
 <div class="container">
     <div class="hero-unit">
@@ -24,12 +25,12 @@
                 {% for planilla in planillas %}
                 <tr>
                     <td scope="row">
-                        <a href="" class="text-dark"  data-toggle="modal"
+                        <a href="" class="text-dark boton_salario" data-button="{{detalles_salario[planilla[0]]}}" data-toggle="modal"
                             data-target="#salarioModal">{{planilla[1]}}</a>
                     </td>
 
                     <td scope="row">
-                        <a href="" class="text-dark"  data-toggle="modal"
+                        <a href="" class="text-dark boton_deduccion" data-button="{{deducciones[planilla[0]]}}"  data-toggle="modal"
                             data-target="#deduccionesModal">{{planilla[2]}}</a>
                     </td>
                     <td>{{planilla[3]}}</td>
@@ -64,14 +65,9 @@
 
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for planilla in planillas %}
-                        <tr>
-                            <td>{{planilla[1]}}</td>
-                            <td>{{planilla[2]}}</td>
-                            <td>{{planilla[3]}}</td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id=tabla_popuot_detalles_deducciones>
+
+
                     </tbody>
                 </table>
 
@@ -108,18 +104,9 @@
 
                      </tr>
                  </thead>
-                 <tbody>
-                     {% for planilla in planillas %}
-                     <tr>
-                         <th>{{planilla[1]}}</th>
-                         <td>{{planilla[2]}}</td>
-                         <td>{{planilla[3]}}</td>
-                         <td>{{planilla[1]}}</td>
-                         <td>{{planilla[2]}}</td>
-                         <td>{{planilla[3]}}</td>
-                         <td>{{planilla[1]}}</td>
-                     </tr>
-                     {% endfor %}
+                 <tbody id="tabla_popuot_detalles_salario">
+                    
+
                  </tbody>
              </table>
 
