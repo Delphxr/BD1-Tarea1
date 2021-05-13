@@ -69,7 +69,7 @@ GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Empleados]
+CREATE TABLE dbo.[dbo.Empleado]
 	(
 	ID int NOT NULL IDENTITY (1, 1),
 	Nombre varchar(128) NOT NULL,
@@ -81,15 +81,15 @@ CREATE TABLE dbo.[dbo.Empleados]
 	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
-	[PK_dbo.Empleados] PRIMARY KEY CLUSTERED 
+ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
+	[PK_dbo.Empleado] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
-	[FK_dbo.Empleados_dbo.Puestos] FOREIGN KEY
+ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
+	[FK_dbo.Empleado_dbo.Puestos] FOREIGN KEY
 	(
 	IdPuesto
 	) REFERENCES dbo.[dbo.Puestos]
@@ -99,8 +99,8 @@ ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
-	[FK_dbo.Empleados_dbo.Departamentos] FOREIGN KEY
+ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
+	[FK_dbo.Empleado_dbo.Departamentos] FOREIGN KEY
 	(
 	IdDepartamento
 	) REFERENCES dbo.[dbo.Departamentos]
@@ -110,8 +110,8 @@ ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
-	[FK_dbo.Empleados_dbo.tipoDocIdent] FOREIGN KEY
+ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
+	[FK_dbo.Empleado_dbo.tipoDocIdent] FOREIGN KEY
 	(
 	IdTipoIdentificacion
 	) REFERENCES dbo.[dbo.tipoDocIdent]
@@ -121,7 +121,7 @@ ALTER TABLE dbo.[dbo.Empleados] ADD CONSTRAINT
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleados] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.[dbo.Empleado] SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
@@ -172,10 +172,10 @@ ALTER TABLE dbo.[dbo.Jornada] ADD CONSTRAINT
 	
 GO
 ALTER TABLE dbo.[dbo.Jornada] ADD CONSTRAINT
-	[FK_dbo.Jornada_dbo.Empleados] FOREIGN KEY
+	[FK_dbo.Jornada_dbo.Empleado] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleados]
+	) REFERENCES dbo.[dbo.Empleado]
 	(
 	ID
 	) ON UPDATE  NO ACTION 
@@ -362,10 +362,10 @@ ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] ADD CONSTRAINT
 	
 GO
 ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] ADD CONSTRAINT
-	[FK_dbo.PlanillaXMesXEmpleado_dbo.Empleados] FOREIGN KEY
+	[FK_dbo.PlanillaXMesXEmpleado_dbo.Empleado] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleados]
+	) REFERENCES dbo.[dbo.Empleado]
 	(
 	ID
 	) ON UPDATE  NO ACTION 
@@ -416,10 +416,10 @@ ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
 
 GO
 ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
-	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.Empleados] FOREIGN KEY
+	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.Empleado] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleados]
+	) REFERENCES dbo.[dbo.Empleado]
 	(
 	ID
 	) ON UPDATE  NO ACTION 
@@ -602,10 +602,10 @@ ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
 	
 GO
 ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
-	[FK_dbo.DeduccionesXMesXEmpleado_dbo.Empleados] FOREIGN KEY
+	[FK_dbo.DeduccionesXMesXEmpleado_dbo.Empleado] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleados]
+	) REFERENCES dbo.[dbo.Empleado]
 	(
 	ID
 	) ON UPDATE  NO ACTION 
