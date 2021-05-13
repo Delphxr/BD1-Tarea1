@@ -1,7 +1,10 @@
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2_Modificado.xml', SINGLE_BLOB) AS Datos(D)
+FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2_Modificado.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+-- para las pruebas estamos manejando ruta estatica, ya una vez terminado
+-- hacemos que la ruta sea dinamica
+
 DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
     
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
@@ -121,6 +124,10 @@ set  @RowCnt = 0;
 SELECT @RowCnt = COUNT(0) FROM @TablaOperaciones;
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
+
+--  ==================================================================================================
+--  || este loop es el que hace las operaciones, de momento lo unico que hace es imprimir los datos ||
+--  ================================================================================================== 
 
 -- ahora vamos a iterar de nuevo y realizar las operaciones de cada columna
 WHILE @CursorTestID <= @RowCnt
