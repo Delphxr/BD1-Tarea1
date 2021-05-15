@@ -10,7 +10,7 @@ SET ANSI_WARNINGS ON
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Puestos]
+CREATE TABLE dbo.Puestos
 	(
 	ID int NOT NULL,
 	Nombre varchar(128) NOT NULL,
@@ -18,58 +18,58 @@ CREATE TABLE dbo.[dbo.Puestos]
 	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Puestos] ADD CONSTRAINT
+ALTER TABLE dbo.Puestos ADD CONSTRAINT
 	[DF_dbo.Puestos_Visible] DEFAULT ((1)) FOR Visible
 GO
-ALTER TABLE dbo.[dbo.Puestos] ADD CONSTRAINT
+ALTER TABLE dbo.Puestos ADD CONSTRAINT
 	[PK_dbo.Puestos] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Puestos] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.Puestos SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Departamentos]
+CREATE TABLE dbo.Departamentos
 	(
 	ID int NOT NULL,
 	Nombre varchar(128) NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Departamentos] ADD CONSTRAINT
+ALTER TABLE dbo.Departamentos ADD CONSTRAINT
 	[PK_dbo.Departamentos] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Departamentos] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.Departamentos SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.tipoDocIdent]
+CREATE TABLE dbo.tipoDocIdent
 	(
 	ID int NOT NULL,
 	Nombre varchar(128) NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.tipoDocIdent] ADD CONSTRAINT
+ALTER TABLE dbo.tipoDocIdent ADD CONSTRAINT
 	[PK_dbo.tipoDocIdent] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.tipoDocIdent] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.tipoDocIdent SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Empleado]
+CREATE TABLE dbo.Empleado
 	(
 	ID int NOT NULL IDENTITY (1, 1),
 	Nombre varchar(128) NOT NULL,
@@ -77,56 +77,57 @@ CREATE TABLE dbo.[dbo.Empleado]
 	ValorDocumentoIdentidad varchar(16) NOT NULL,
 	IdDepartamento int NOT NULL,
 	IdPuesto int NOT NULL,
+	IdUsuario int NOT NULL,
 	FechaNacimiento date NOT NULL,
 	Visible bit NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
-	[PK_dbo.Empleado] PRIMARY KEY CLUSTERED 
+ALTER TABLE dbo.Empleado ADD CONSTRAINT
+	[PK_dbo.Empleados] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
-	[FK_dbo.Empleado_dbo.Puestos] FOREIGN KEY
+ALTER TABLE dbo.Empleado ADD CONSTRAINT
+	[FK_dbo.Empleados_dbo.Puestos] FOREIGN KEY
 	(
 	IdPuesto
-	) REFERENCES dbo.[dbo.Puestos]
+	) REFERENCES dbo.Puestos
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
-	[FK_dbo.Empleado_dbo.Departamentos] FOREIGN KEY
+ALTER TABLE dbo.Empleado ADD CONSTRAINT
+	[FK_dbo.Empleados_dbo.Departamentos] FOREIGN KEY
 	(
 	IdDepartamento
-	) REFERENCES dbo.[dbo.Departamentos]
+	) REFERENCES dbo.Departamentos
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleado] ADD CONSTRAINT
-	[FK_dbo.Empleado_dbo.tipoDocIdent] FOREIGN KEY
+ALTER TABLE dbo.Empleado ADD CONSTRAINT
+	[FK_dbo.Empleados_dbo.tipoDocIdent] FOREIGN KEY
 	(
 	IdTipoIdentificacion
-	) REFERENCES dbo.[dbo.tipoDocIdent]
+	) REFERENCES dbo.tipoDocIdent
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Empleado] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.Empleado SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.TipoJornada]
+CREATE TABLE dbo.TipoJornada
 	(
 	ID int NOT NULL,
 	Nombre varchar(128) NOT NULL,
@@ -134,116 +135,116 @@ CREATE TABLE dbo.[dbo.TipoJornada]
 	HoraSalida time(7) NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.TipoJornada] ADD CONSTRAINT
+ALTER TABLE dbo.TipoJornada ADD CONSTRAINT
 	[PK_dbo.TipoJornada] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.TipoJornada] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.TipoJornada SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Jornada]
+CREATE TABLE dbo.Jornada
 	(
 	ID int NOT NULL,
 	IdTipoJornada int NOT NULL,
 	IdEmpleado int NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Jornada] ADD CONSTRAINT
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
 	[PK_dbo.Jornada] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Jornada] ADD CONSTRAINT
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
 	[FK_dbo.Jornada_dbo.TipoJornada] FOREIGN KEY
 	(
 	IdTipoJornada
-	) REFERENCES dbo.[dbo.TipoJornada]
+	) REFERENCES dbo.TipoJornada
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Jornada] ADD CONSTRAINT
-	[FK_dbo.Jornada_dbo.Empleado] FOREIGN KEY
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
+	[FK_dbo.Jornada_dbo.Empleados] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleado]
+	) REFERENCES dbo.Empleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.Jornada] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.Jornada SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.MarcasAsistencia]
+CREATE TABLE dbo.MarcasAsistencia
 	(
 	ID int NOT NULL,
 	FechaEntrada datetime NOT NULL,
 	FechaSalida datetime NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.MarcasAsistencia] ADD CONSTRAINT
+ALTER TABLE dbo.MarcasAsistencia ADD CONSTRAINT
 	[PK_dbo.MarcasAsistencia] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.MarcasAsistencia] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.MarcasAsistencia SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.TipoMovimiento]
+CREATE TABLE dbo.TipoMovimiento
 	(
 	ID int NOT NULL,
 	Nombre varchar(128) NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.TipoMovimiento] ADD CONSTRAINT
+ALTER TABLE dbo.TipoMovimiento ADD CONSTRAINT
 	[PK_dbo.TipoMovimiento] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.TipoMovimiento] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.TipoMovimiento SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.Feriados]
+CREATE TABLE dbo.Feriados
 	(
 	ID int NOT NULL,
 	Fecha date NOT NULL,
 	Nombre varchar(128) NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.Feriados] ADD CONSTRAINT
+ALTER TABLE dbo.Feriados ADD CONSTRAINT
 	[PK_dbo.Feriados] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.Feriados] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.Feriados SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.TipoDeduccion]
+CREATE TABLE dbo.TipoDeduccion
 	(
 	ID int NOT NULL,
 	Nombre varchar(50) NOT NULL,
@@ -252,14 +253,14 @@ CREATE TABLE dbo.[dbo.TipoDeduccion]
 	Valor money NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.TipoDeduccion] ADD CONSTRAINT
+ALTER TABLE dbo.TipoDeduccion ADD CONSTRAINT
 	[PK_dbo.TipoDeduccion] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.TipoDeduccion] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.TipoDeduccion SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
@@ -284,25 +285,25 @@ GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.MesPlanilla]
+CREATE TABLE dbo.MesPlanilla
 	(
 	ID int NOT NULL IDENTITY (1, 1),
 	Fecha date NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.MesPlanilla] ADD CONSTRAINT
+ALTER TABLE dbo.MesPlanilla ADD CONSTRAINT
 	[PK_dbo.MesPlanilla] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.MesPlanilla] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.MesPlanilla SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.SemanaPlanilla]
+CREATE TABLE dbo.SemanaPlanilla
 	(
 	ID int NOT NULL IDENTITY (1, 1),
 	FechaInicio date NOT NULL,
@@ -310,32 +311,32 @@ CREATE TABLE dbo.[dbo.SemanaPlanilla]
 	IdMes int NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.SemanaPlanilla] ADD CONSTRAINT
+ALTER TABLE dbo.SemanaPlanilla ADD CONSTRAINT
 	[PK_dbo.SemanaPlanilla] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.SemanaPlanilla] ADD CONSTRAINT
+ALTER TABLE dbo.SemanaPlanilla ADD CONSTRAINT
 	[FK_dbo.SemanaPlanilla_dbo.MesPlanilla] FOREIGN KEY
 	(
 	IdMes
-	) REFERENCES dbo.[dbo.MesPlanilla]
+	) REFERENCES dbo.MesPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.SemanaPlanilla] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.SemanaPlanilla SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.PlanillaXMesXEmpleado]
+CREATE TABLE dbo.PlanillaXMesXEmpleado
 	(
-	ID int NOT NULL,
+	ID int NOT NULL IDENTITY (1, 1),
 	SalarioNeto money NOT NULL,
 	SalarioBruto money NOT NULL,
 	TotalDeducciones money NOT NULL,
@@ -343,60 +344,152 @@ CREATE TABLE dbo.[dbo.PlanillaXMesXEmpleado]
 	idMes int NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXMesXEmpleado ADD CONSTRAINT
 	[PK_dbo.PlanillaXMesXEmpleado] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXMesXEmpleado ADD CONSTRAINT
 	[FK_dbo.PlanillaXMesXEmpleado_dbo.MesPlanilla] FOREIGN KEY
 	(
 	idMes
-	) REFERENCES dbo.[dbo.MesPlanilla]
+	) REFERENCES dbo.MesPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] ADD CONSTRAINT
-	[FK_dbo.PlanillaXMesXEmpleado_dbo.Empleado] FOREIGN KEY
+ALTER TABLE dbo.PlanillaXMesXEmpleado ADD CONSTRAINT
+	[FK_dbo.PlanillaXMesXEmpleado_dbo.Empleados] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleado]
+	) REFERENCES dbo.Empleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXMesXEmpleado] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.PlanillaXMesXEmpleado SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.MovimientoPlanilla]
+CREATE TABLE dbo.MovimientoPlanilla
 	(
-	ID int NOT NULL,
+	ID int NOT NULL IDENTITY (1, 1),
 	Fecha date NOT NULL,
-	Monto money NOT NULL
+	Monto money NOT NULL,
+	IdTipoMov int NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.MovimientoPlanilla] ADD CONSTRAINT
+ALTER TABLE dbo.MovimientoPlanilla ADD CONSTRAINT
 	[PK_dbo.MovimientoPlanilla] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.MovimientoPlanilla] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.MovimientoPlanilla ADD CONSTRAINT
+	FK_MovimientoPlanilla_TipoMovimiento FOREIGN KEY
+	(
+	IdTipoMov
+	) REFERENCES dbo.TipoMovimiento
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoPlanilla SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.PlanillaXSemanaXEmpleado]
+CREATE TABLE dbo.MovimientoDeduccion
+	(
+	ID int NOT NULL,
+	IdTipoDeduccion int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.MovimientoDeduccion ADD CONSTRAINT
+	[PK_dbo.MovimientoDeduccion] PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.MovimientoDeduccion ADD CONSTRAINT
+	[FK_dbo.MovimientoDeduccion_dbo.TipoDeduccion] FOREIGN KEY
+	(
+	IdTipoDeduccion
+	) REFERENCES dbo.TipoDeduccion
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoDeduccion ADD CONSTRAINT
+	FK_MovimientoDeduccion_MovimientoPlanilla FOREIGN KEY
+	(
+	ID
+	) REFERENCES dbo.MovimientoPlanilla
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoDeduccion SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.MovimientoHoras
+	(
+	ID int NOT NULL,
+	IdMarcaAsistencia int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.MovimientoHoras ADD CONSTRAINT
+	[PK_dbo.MovimientoHoras] PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.MovimientoHoras ADD CONSTRAINT
+	[FK_dbo.MovimientoHoras_dbo.MarcasAsistencia] FOREIGN KEY
+	(
+	IdMarcaAsistencia
+	) REFERENCES dbo.MarcasAsistencia
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoHoras ADD CONSTRAINT
+	FK_MovimientoHoras_MovimientoPlanilla FOREIGN KEY
+	(
+	ID
+	) REFERENCES dbo.MovimientoPlanilla
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoHoras SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.PlanillaXSemanaXEmpleado
 	(
 	ID int NOT NULL IDENTITY (1, 1),
 	SalarioBruto money NOT NULL,
@@ -408,159 +501,65 @@ CREATE TABLE dbo.[dbo.PlanillaXSemanaXEmpleado]
 	IdPlanillaXMesXEmpleado int NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado ADD CONSTRAINT
 	[PK_dbo.PlanillaXSemanaXEmpleado] PRIMARY KEY CLUSTERED 
 	(
 	ID
 	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
-	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.Empleado] FOREIGN KEY
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado ADD CONSTRAINT
+	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.Empleados] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleado]
+	) REFERENCES dbo.Empleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado ADD CONSTRAINT
 	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.MovimientoPlanilla] FOREIGN KEY
 	(
 	IdMovimientoPlanilla
-	) REFERENCES dbo.[dbo.MovimientoPlanilla]
+	) REFERENCES dbo.MovimientoPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado ADD CONSTRAINT
 	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.PlanillaXMesXEmpleado] FOREIGN KEY
 	(
 	IdPlanillaXMesXEmpleado
-	) REFERENCES dbo.[dbo.PlanillaXMesXEmpleado]
+	) REFERENCES dbo.PlanillaXMesXEmpleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado ADD CONSTRAINT
 	[FK_dbo.PlanillaXSemanaXEmpleado_dbo.SemanaPlanilla] FOREIGN KEY
 	(
 	IdSemana
-	) REFERENCES dbo.[dbo.SemanaPlanilla]
+	) REFERENCES dbo.SemanaPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.PlanillaXSemanaXEmpleado] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.PlanillaXSemanaXEmpleado SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
 BEGIN TRANSACTION
 GO
-CREATE TABLE dbo.[dbo.MovimientoHoras]
+CREATE TABLE dbo.DeduccionesXMesXEmpleado
 	(
 	ID int NOT NULL IDENTITY (1, 1),
-	IdTipoMovimiento int NOT NULL,
-	IdMovPlanilla int NOT NULL,
-	IdMarcaAsistencia int NOT NULL
-	)  ON [PRIMARY]
-GO
-ALTER TABLE dbo.[dbo.MovimientoHoras] ADD CONSTRAINT
-	[PK_dbo.MovimientoHoras] PRIMARY KEY CLUSTERED 
-	(
-	ID
-	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-
-GO
-ALTER TABLE dbo.[dbo.MovimientoHoras] ADD CONSTRAINT
-	[FK_dbo.MovimientoHoras_dbo.TipoMovimiento] FOREIGN KEY
-	(
-	IdTipoMovimiento
-	) REFERENCES dbo.[dbo.TipoMovimiento]
-	(
-	ID
-	) ON UPDATE  NO ACTION 
-	 ON DELETE  NO ACTION 
-	
-GO
-ALTER TABLE dbo.[dbo.MovimientoHoras] ADD CONSTRAINT
-	[FK_dbo.MovimientoHoras_dbo.MovimientoPlanilla] FOREIGN KEY
-	(
-	IdMovPlanilla
-	) REFERENCES dbo.[dbo.MovimientoPlanilla]
-	(
-	ID
-	) ON UPDATE  NO ACTION 
-	 ON DELETE  NO ACTION 
-	
-GO
-ALTER TABLE dbo.[dbo.MovimientoHoras] ADD CONSTRAINT
-	[FK_dbo.MovimientoHoras_dbo.MarcasAsistencia] FOREIGN KEY
-	(
-	IdMarcaAsistencia
-	) REFERENCES dbo.[dbo.MarcasAsistencia]
-	(
-	ID
-	) ON UPDATE  NO ACTION 
-	 ON DELETE  NO ACTION 
-	
-GO
-ALTER TABLE dbo.[dbo.MovimientoHoras] SET (LOCK_ESCALATION = TABLE)
-GO
-COMMIT
-BEGIN TRANSACTION
-GO
-CREATE TABLE dbo.[dbo.MovimientoDeduccion]
-	(
-	ID int NOT NULL,
-	IdTipoDeduccion int NOT NULL,
-	IdMovPlanilla int NOT NULL
-	)  ON [PRIMARY]
-GO
-ALTER TABLE dbo.[dbo.MovimientoDeduccion] ADD CONSTRAINT
-	[PK_dbo.MovimientoDeduccion] PRIMARY KEY CLUSTERED 
-	(
-	ID
-	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-
-GO
-ALTER TABLE dbo.[dbo.MovimientoDeduccion] ADD CONSTRAINT
-	[FK_dbo.MovimientoDeduccion_dbo.TipoDeduccion] FOREIGN KEY
-	(
-	IdTipoDeduccion
-	) REFERENCES dbo.[dbo.TipoDeduccion]
-	(
-	ID
-	) ON UPDATE  NO ACTION 
-	 ON DELETE  NO ACTION 
-	
-GO
-ALTER TABLE dbo.[dbo.MovimientoDeduccion] ADD CONSTRAINT
-	[FK_dbo.MovimientoDeduccion_dbo.MovimientoPlanilla] FOREIGN KEY
-	(
-	IdMovPlanilla
-	) REFERENCES dbo.[dbo.MovimientoPlanilla]
-	(
-	ID
-	) ON UPDATE  NO ACTION 
-	 ON DELETE  NO ACTION 
-	
-GO
-ALTER TABLE dbo.[dbo.MovimientoDeduccion] SET (LOCK_ESCALATION = TABLE)
-GO
-COMMIT
-BEGIN TRANSACTION
-GO
-CREATE TABLE dbo.[dbo.DeduccionesXMesXEmpleado]
-	(
-	ID int NOT NULL,
 	Monto money NOT NULL,
 	IdPlanillaXMesXEmpleado int NOT NULL,
 	IdMovimiento int NOT NULL,
@@ -568,50 +567,50 @@ CREATE TABLE dbo.[dbo.DeduccionesXMesXEmpleado]
 	IdMes int NOT NULL
 	)  ON [PRIMARY]
 GO
-ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.DeduccionesXMesXEmpleado ADD CONSTRAINT
 	[FK_dbo.DeduccionesXMesXEmpleado_dbo.PlanillaXMesXEmpleado] FOREIGN KEY
 	(
 	IdPlanillaXMesXEmpleado
-	) REFERENCES dbo.[dbo.PlanillaXMesXEmpleado]
+	) REFERENCES dbo.PlanillaXMesXEmpleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.DeduccionesXMesXEmpleado ADD CONSTRAINT
 	[FK_dbo.DeduccionesXMesXEmpleado_dbo.MovimientoPlanilla] FOREIGN KEY
 	(
 	IdMovimiento
-	) REFERENCES dbo.[dbo.MovimientoPlanilla]
+	) REFERENCES dbo.MovimientoPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
+ALTER TABLE dbo.DeduccionesXMesXEmpleado ADD CONSTRAINT
 	[FK_dbo.DeduccionesXMesXEmpleado_dbo.MesPlanilla] FOREIGN KEY
 	(
 	IdMes
-	) REFERENCES dbo.[dbo.MesPlanilla]
+	) REFERENCES dbo.MesPlanilla
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] ADD CONSTRAINT
-	[FK_dbo.DeduccionesXMesXEmpleado_dbo.Empleado] FOREIGN KEY
+ALTER TABLE dbo.DeduccionesXMesXEmpleado ADD CONSTRAINT
+	[FK_dbo.DeduccionesXMesXEmpleado_dbo.Empleados] FOREIGN KEY
 	(
 	IdEmpleado
-	) REFERENCES dbo.[dbo.Empleado]
+	) REFERENCES dbo.Empleado
 	(
 	ID
 	) ON UPDATE  NO ACTION 
 	 ON DELETE  NO ACTION 
 	
 GO
-ALTER TABLE dbo.[dbo.DeduccionesXMesXEmpleado] SET (LOCK_ESCALATION = TABLE)
+ALTER TABLE dbo.DeduccionesXMesXEmpleado SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
