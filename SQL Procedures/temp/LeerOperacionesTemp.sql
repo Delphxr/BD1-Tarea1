@@ -9,9 +9,126 @@ DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
     
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
 
+
+
+--  ============================
+--  || cargamos los catalogos ||
+--  ============================ 
+
+INSERT INTO dbo.Puestos(ID,Nombre,SalarioXHora,Visible)
+SELECT Id,Nombre,SalarioXHora,1
+FROM OPENXML (@hdoc,'/Datos/Catalogos/Puestos/Puesto',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64),
+	SalarioXHora money
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.Puestos c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+INSERT INTO dbo.Departamentos(ID,Nombre)
+SELECT Id,Nombre
+FROM OPENXML (@hdoc,'/Datos/Catalogos/Departamentos/Departamento',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64)
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.Departamentos c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+INSERT INTO dbo.tipoDocIdent(ID,Nombre)
+SELECT Id,Nombre
+FROM OPENXML (@hdoc,'/Datos/Catalogos/Tipos_de_Documento_de_Identificacion/TipoIdDoc',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64)
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.tipoDocIdent c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+
+INSERT INTO dbo.TipoJornada(ID,Nombre,HoraEntrada,HoraSalida)
+SELECT Id,Nombre,HoraEntrada,HoraSalida
+FROM OPENXML (@hdoc,'/Datos/Catalogos/TiposDeJornada/TipoDeJornada',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64),
+	HoraEntrada TIME,
+	HoraSalida TIME
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.TipoJornada c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+
+
+INSERT INTO dbo.TipoMovimiento(ID,Nombre)
+SELECT Id,Nombre
+FROM OPENXML (@hdoc,'/Datos/Catalogos/TiposDeMovimiento/TipoDeMovimiento',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64)
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.TipoMovimiento c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+
+
+INSERT INTO dbo.Feriados(Fecha,Nombre)
+SELECT Fecha,Nombre
+FROM OPENXML (@hdoc,'/Datos/Catalogos/Feriados/Feriado',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Fecha DATE,
+    Nombre VARCHAR(64)
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.Feriados c
+				WHERE cr.Fecha = c.Fecha)
+	-- solo insertamos si no existe esa fecha ya
+
+
+
+--aqui los cast convierten 'si' y 'no' a valores bit
+INSERT INTO dbo.TipoDeduccion(ID,Nombre,Obligatorio,Porcentual,Valor)
+SELECT Id,Nombre,CAST(CASE Obligatorio WHEN 'Si' THEN 1 WHEN 'No' THEN 0 ELSE Obligatorio END AS BIT),CAST(CASE Porcentual WHEN 'Si' THEN 1 WHEN 'No' THEN 0 ELSE Porcentual END AS BIT),Valor
+FROM OPENXML (@hdoc,'/Datos/Catalogos/Deducciones/TipoDeDeduccion',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+	Id int,
+    Nombre VARCHAR(64),
+	Obligatorio VARCHAR(5),
+	Porcentual VARCHAR(5),
+	Valor MONEY
+    ) cr
+	WHERE
+	NOT EXISTS (SELECT 1 FROM dbo.TipoDeduccion c
+				WHERE cr.ID = c.Id)
+	-- solo insertamos si no existe esa id ya
+
+
+
+--  ============================================
+--  || Empezamos a ingresar las operaciones   ||
+--  ============================================ 
+
+
+
 -- esta tabla es para guardar las operaciones que vamos a hacer, donde cada fila es un dia diferente
 
-DELETE FROM dbo.Empleado/*Limpia la tabla Puestos*/
+DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
 
 DECLARE @TablaOperaciones TABLE(
@@ -151,7 +268,7 @@ BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					INSERT INTO Empleado (FechaNacimiento,Nombre,Usuario,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdTipoIdentificacion,Visible)
-					SELECT FechaNacimiento,Nombre,Username,IdDepartamento,ValorDocumentoIdentidad,idPuesto,idTipoDocumentacionIdentidad,0 
+					SELECT FechaNacimiento,Nombre,Username,IdDepartamento,ValorDocumentoIdentidad,idPuesto,idTipoDocumentacionIdentidad,1
 					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
 					WITH (
 						FechaNacimiento DATE,
@@ -188,7 +305,7 @@ BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					Update Empleado
-					SET Visible = 1
+					SET Visible = 0
 					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) 
 					WITH(
 						ValorDocumentoIdentidad varchar(16)

@@ -738,6 +738,37 @@ ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
 	
 GO
 COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.Tmp_Feriados
+	(
+	ID int NOT NULL IDENTITY (1, 1),
+	Fecha date NOT NULL,
+	Nombre varchar(128) NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.Tmp_Feriados SET (LOCK_ESCALATION = TABLE)
+GO
+SET IDENTITY_INSERT dbo.Tmp_Feriados ON
+GO
+IF EXISTS(SELECT * FROM dbo.Feriados)
+	 EXEC('INSERT INTO dbo.Tmp_Feriados (ID, Fecha, Nombre)
+		SELECT ID, Fecha, Nombre FROM dbo.Feriados WITH (HOLDLOCK TABLOCKX)')
+GO
+SET IDENTITY_INSERT dbo.Tmp_Feriados OFF
+GO
+DROP TABLE dbo.Feriados
+GO
+EXECUTE sp_rename N'dbo.Tmp_Feriados', N'Feriados', 'OBJECT' 
+GO
+ALTER TABLE dbo.Feriados ADD CONSTRAINT
+	[PK_dbo.Feriados] PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+COMMIT
 
 
 
