@@ -614,3 +614,131 @@ GO
 ALTER TABLE dbo.DeduccionesXMesXEmpleado SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
+
+
+
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.Empleado SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.TipoDeduccion SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.DeduccionesXEmpleado
+	(
+	ID int NOT NULL,
+	IdEmpleado int NOT NULL,
+	IdTipoDeduccion int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	PK_DeduccionesXEmpleado PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	FK_DeduccionesXEmpleado_TipoDeduccion FOREIGN KEY
+	(
+	IdTipoDeduccion
+	) REFERENCES dbo.TipoDeduccion
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	FK_DeduccionesXEmpleado_Empleado FOREIGN KEY
+	(
+	IdEmpleado
+	) REFERENCES dbo.Empleado
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado
+	DROP CONSTRAINT FK_DeduccionesXEmpleado_Empleado
+GO
+ALTER TABLE dbo.Empleado SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado
+	DROP CONSTRAINT FK_DeduccionesXEmpleado_TipoDeduccion
+GO
+ALTER TABLE dbo.TipoDeduccion SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.Tmp_DeduccionesXEmpleado
+	(
+	ID int NOT NULL IDENTITY (1, 1),
+	IdEmpleado int NOT NULL,
+	IdTipoDeduccion int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.Tmp_DeduccionesXEmpleado SET (LOCK_ESCALATION = TABLE)
+GO
+SET IDENTITY_INSERT dbo.Tmp_DeduccionesXEmpleado ON
+GO
+IF EXISTS(SELECT * FROM dbo.DeduccionesXEmpleado)
+	 EXEC('INSERT INTO dbo.Tmp_DeduccionesXEmpleado (ID, IdEmpleado, IdTipoDeduccion)
+		SELECT ID, IdEmpleado, IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WITH (HOLDLOCK TABLOCKX)')
+GO
+SET IDENTITY_INSERT dbo.Tmp_DeduccionesXEmpleado OFF
+GO
+DROP TABLE dbo.DeduccionesXEmpleado
+GO
+EXECUTE sp_rename N'dbo.Tmp_DeduccionesXEmpleado', N'DeduccionesXEmpleado', 'OBJECT' 
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	PK_DeduccionesXEmpleado PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	FK_DeduccionesXEmpleado_TipoDeduccion FOREIGN KEY
+	(
+	IdTipoDeduccion
+	) REFERENCES dbo.TipoDeduccion
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.DeduccionesXEmpleado ADD CONSTRAINT
+	FK_DeduccionesXEmpleado_Empleado FOREIGN KEY
+	(
+	IdEmpleado
+	) REFERENCES dbo.Empleado
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+COMMIT
+
+
+
+
