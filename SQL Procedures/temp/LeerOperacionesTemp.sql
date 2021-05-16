@@ -119,6 +119,16 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 	-- solo insertamos si no existe esa id ya
 
 
+INSERT INTO dbo.Usuarios(Username,Pwd,Tipo)
+SELECT username,pwd,tipo
+FROM OPENXML (@hdoc,'/Datos/Usuarios/Usuario',1)
+WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
+    username VARCHAR(64),
+	pwd VARCHAR(64),
+	tipo INT
+    )
+
+
 
 --  ============================================
 --  || Empezamos a ingresar las operaciones   ||
