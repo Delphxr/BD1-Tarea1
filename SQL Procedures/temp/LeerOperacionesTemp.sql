@@ -10,6 +10,10 @@ DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
 
 -- esta tabla es para guardar las operaciones que vamos a hacer, donde cada fila es un dia diferente
+
+DELETE FROM dbo.Empleado/*Limpia la tabla Puestos*/
+DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
+
 DECLARE @TablaOperaciones TABLE(
 	ID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED, --el id es para cuando hagamos la iteracion de la tabla
 	XmlData XML, --aqui vamos a guardar los nodos de cada operacion para luego dividirlos por categoria
@@ -181,9 +185,22 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
+			if(@Fecha_Actual = @Fin_Semana)
+				begin
+					Update Empleado
+					SET Visible = 1
+					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) 
+					WITH(
+						ValorDocumentoIdentidad varchar(16)
+					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
+
+					SELECT * FROM Empleado
+					
+
+				end
 			SELECT * FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3)
 				WITH (
-					ValorDocumentoIdentidad int
+					ValorDocumentoIdentidad varchar(16)
 				)
 		end
 
