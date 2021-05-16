@@ -277,15 +277,13 @@ BEGIN
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
-					INSERT INTO Empleado (FechaNacimiento,Nombre,Usuario,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdTipoIdentificacion,Visible)
-					SELECT FechaNacimiento,Nombre,Username,IdDepartamento,ValorDocumentoIdentidad,idPuesto,idTipoDocumentacionIdentidad,1
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
+					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
 					WITH (
 						FechaNacimiento DATE,
 						Nombre varchar(100),
-						Password varchar(100),
-						Username varchar(100),
-						IdDepartamento int,
+						idDepartamento int,
 						ValorDocumentoIdentidad int,
 						idPuesto int,
 						idTipoDocumentacionIdentidad int
