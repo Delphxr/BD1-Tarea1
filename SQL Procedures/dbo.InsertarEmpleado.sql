@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.InsertarEmpleado
+CREATE PROCEDURE [dbo].[InsertarEmpleado]
 	-- parametros de entrada
 	  @inNombre VARCHAR(100)
 	, @inTipoIdentidicacionId INT
@@ -39,12 +39,13 @@ BEGIN
 		END;
 
 
-		INSERT INTO [dbo].[Empleados]
+		INSERT INTO [dbo].[Empleado]
            ([Nombre]
            ,[IdTipoIdentificacion]
-           ,[ValorDocumentoIdentificacion]
+           ,[ValorDocumentoIdentidad]
            ,[IdDepartamento]
            ,[IdPuesto]
+		   ,[IdUsuario]
            ,[FechaNacimiento]
 		   ,[Visible])
 		VALUES
@@ -53,6 +54,7 @@ BEGIN
            ,@inValorDocumentoIdentificacion
            ,@inDepartamentoId
            ,@inPuestoId
+		   ,1
            ,@inFechaNacimiento
 		   ,@inVisible)
 

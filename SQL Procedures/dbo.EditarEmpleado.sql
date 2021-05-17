@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.EditarEmpleado
+CREATE PROCEDURE [dbo].[EditarEmpleado]
 	-- parametros de entrada
 	  @inEmpleadoID INT
 	, @inNombre VARCHAR(100)
@@ -41,16 +41,16 @@ BEGIN
 			RETURN
 		END;
 
-		IF NOT EXISTS(SELECT 1 FROM dbo.Empleados E WHERE E.ID=@inEmpleadoID)
+		IF NOT EXISTS(SELECT 1 FROM dbo.Empleado E WHERE E.ID=@inEmpleadoID)
 		BEGIN
 			Set @OutResultCode=50004; -- el empleado no existe
 			RETURN
 		END;
 		
-		UPDATE [dbo].[Empleados]
+		UPDATE [dbo].[Empleado]
 			SET [Nombre] = @inNombre
 			  ,[IdTipoIdentificacion] = @inTipoIdentidicacionId
-			  ,[ValorDocumentoIdentificacion] = @inValorDocumentoIdentificacion
+			  ,[ValorDocumentoIdentidad] = @inValorDocumentoIdentificacion
 			  ,[IdDepartamento] = @inDepartamentoId
 			  ,[IdPuesto] = @inPuestoId
 			  ,[FechaNacimiento] = @inFechaNacimiento

@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.OcultarEmpleado
+CREATE PROCEDURE [dbo].[OcultarEmpleado]
 	-- parametros de entrada
 	  @inEmpleadoID INT
 	, @inVisible BIT
@@ -16,13 +16,13 @@ BEGIN
 
 			-- Validacion de paramentros de entrada
 
-		IF NOT EXISTS(SELECT 1 FROM dbo.Empleados E WHERE E.ID=@inEmpleadoID)
+		IF NOT EXISTS(SELECT 1 FROM dbo.Empleado E WHERE E.ID=@inEmpleadoID)
 		BEGIN
 			Set @OutResultCode=50001; -- el empleado no existe
 			RETURN
 		END;
 		
-		UPDATE [dbo].[Empleados]
+		UPDATE [dbo].[Empleado]
 			SET [Visible] = @inVisible
 			WHERE ID=@inEmpleadoID
 
