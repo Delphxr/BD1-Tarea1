@@ -377,12 +377,15 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			SELECT * FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
-				WITH (
-					IdDeduccion int,
-					Monto money,
-					ValorDocumentoIdentidad int
-				)
+			if(@Fecha_Actual = @Fin_Semana)
+				begin
+					SELECT * FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
+					WITH (
+						IdDeduccion int,
+						Monto money,
+						ValorDocumentoIdentidad int
+					)
+				end			
 		end
 
 	-- cargamos desasocia empleado con deduccion en caso de que haya
@@ -390,11 +393,14 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			SELECT * FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3)
-				WITH (
-					IdDeduccion int,
-					ValorDocumentoIdentidad int
-				)
+			if(@Fecha_Actual = @Fin_Semana)
+			begin
+				SELECT * FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3)
+					WITH (
+						IdDeduccion int,
+						ValorDocumentoIdentidad int
+					)
+			end
 		end
 
 	-- cargamos tipo de jornada en caso de que haya
@@ -402,11 +408,16 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			SELECT * FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3)
-				WITH (
-					IdJornada int,
-					ValorDocumentoIdentidad int
-				)
+			--if(@Fecha_Actual = @Fin_Semana)
+			--begin
+				INSERT INTO dbo.Jornada(IdTipoJornada,IdEmpleado)
+					SELECT IdJornada,(Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad)
+					FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3)
+						WITH (
+							IdJornada int,
+							ValorDocumentoIdentidad int
+						) cr
+			--end
 		end
 
 	-- cargamosmarca de asistencia en caso de que haya

@@ -820,5 +820,77 @@ COMMIT
 
 
 
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.Jornada
+	DROP CONSTRAINT [FK_dbo.Jornada_dbo.Empleados]
+GO
+ALTER TABLE dbo.Empleado SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.Jornada
+	DROP CONSTRAINT [FK_dbo.Jornada_dbo.TipoJornada]
+GO
+ALTER TABLE dbo.TipoJornada SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.Tmp_Jornada
+	(
+	ID int NOT NULL IDENTITY (1, 1),
+	IdTipoJornada int NOT NULL,
+	IdEmpleado int NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.Tmp_Jornada SET (LOCK_ESCALATION = TABLE)
+GO
+SET IDENTITY_INSERT dbo.Tmp_Jornada ON
+GO
+IF EXISTS(SELECT * FROM dbo.Jornada)
+	 EXEC('INSERT INTO dbo.Tmp_Jornada (ID, IdTipoJornada, IdEmpleado)
+		SELECT ID, IdTipoJornada, IdEmpleado FROM dbo.Jornada WITH (HOLDLOCK TABLOCKX)')
+GO
+SET IDENTITY_INSERT dbo.Tmp_Jornada OFF
+GO
+DROP TABLE dbo.Jornada
+GO
+EXECUTE sp_rename N'dbo.Tmp_Jornada', N'Jornada', 'OBJECT' 
+GO
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
+	[PK_dbo.Jornada] PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
+	[FK_dbo.Jornada_dbo.TipoJornada] FOREIGN KEY
+	(
+	IdTipoJornada
+	) REFERENCES dbo.TipoJornada
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.Jornada ADD CONSTRAINT
+	[FK_dbo.Jornada_dbo.Empleados] FOREIGN KEY
+	(
+	IdEmpleado
+	) REFERENCES dbo.Empleado
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+COMMIT
+
+
+
 
 
