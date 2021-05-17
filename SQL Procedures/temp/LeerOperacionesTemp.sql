@@ -266,6 +266,10 @@ DECLARE @NuevoEmpleadoTemp TABLE(
 						idTipoDocumentacionIdentidad int
 						)
 
+DECLARE @EliminarEmpleadoTemp TABLE(
+						ValorDocumentoIdentidad VARCHAR(16)
+						)
+
 
 
 
@@ -331,15 +335,19 @@ BEGIN
 							idPuesto int,
 							idTipoDocumentacionIdentidad int
 							)
-				end
-			
+				end			
 		end
+
+
+
 	-- cargamos eliminar empleado
 	set @subxml = (select TOP 1 EliminarEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-
+			-- en caso de ser fin de semana:
+			if(@Fecha_Actual = @Fin_Semana)
+				begin
 					Update Empleado
 					SET Visible = 0
 					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) 
@@ -348,14 +356,21 @@ BEGIN
 					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
 
 					SELECT * FROM Empleado
-					
-
-
-			SELECT * FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3)
-				WITH (
-					ValorDocumentoIdentidad varchar(16)
-				)
+				end
+			-- si es otro dia:
+			ELSE
+				begin
+					INSERT INTO @EliminarEmpleadoTemp(ValorDocumentoIdentidad)
+					SELECT ValorDocumentoIdentidad
+					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3)
+					WITH(
+						ValorDocumentoIdentidad varchar(16)
+					)
+				end
 		end
+
+
+
 
 	-- cargamos asocia empleado con deduccion en caso de que haya
 	set @subxml = (select TOP 1 AsociaEmpleadoConDeduccion FROM @TablaOperaciones WHERE id = @CursorTestID)
