@@ -9,18 +9,27 @@ BEGIN
 			@OutResultCode=0  -- codigo de ejecucion exitoso
 		
 		BEGIN TRANSACTION
-		
-			DELETE FROM [dbo].[Empleados]
-					WHERE ID>=0
-
+			DELETE FROM [dbo].[DeduccionesXEmpleado]
+			DELETE FROM [dbo].[PlanillaXSemanaXEmpleado]
+			DELETE FROM [dbo].[DeduccionesXMesXEmpleado]
+			DELETE FROM [dbo].[PlanillaXMesXEmpleado]
+			DELETE FROM [dbo].[Feriados]
+			DELETE FROM [dbo].[Jornada]
+			DELETE FROM [dbo].[TipoJornada]
+			DELETE FROM [dbo].[MovimientoDeduccion]
+			DELETE FROM [dbo].[TipoDeduccion]
+			DELETE FROM [dbo].[MovimientoHoras]
+			DELETE FROM [dbo].[MarcasAsistencia]
+			DELETE FROM [dbo].[MovimientoPlanilla]
+			DELETE FROM [dbo].[TipoMovimiento]
+			DELETE FROM [dbo].[Empleado]
+			DELETE FROM [dbo].[SemanaPlanilla]
+			DELETE FROM [dbo].[MesPlanilla]
 			DELETE FROM [dbo].[Departamentos]
-					WHERE ID>=0
 			DELETE FROM [dbo].[Puestos]
-					WHERE ID>=0
 			DELETE FROM [dbo].[TipoDocIdent]
-					WHERE ID>=0
-			DELETE FROM [dbo].[Administradores]
-					WHERE Usuario != 'admin'
+			DELETE FROM [dbo].[Usuarios]
+					WHERE Username != 'admin'
 			
 		COMMIT TRANSACTION;  -- Garantiza el todo 
 			--(respecto del todo o nada, de la A de ACID, atomico)
