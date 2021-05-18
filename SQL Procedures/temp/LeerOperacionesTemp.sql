@@ -1,7 +1,7 @@
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -281,6 +281,12 @@ DECLARE @EliminarEmpleadoTemp TABLE(
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
 
+declare @cntx int = 1;
+declare @cntrendx int;
+declare @monto money = 0
+declare @horas int
+declare @marcaasistenciatempx TABLE(id int identity(1,1) primary key,FechaEntrada datetime,FechaSalida datetime,ValorDocumentoIdentidad int)
+			
 --  ==================================================================================================
 --  || este loop es el que hace las operaciones, de momento lo unico que hace es imprimir los datos ||
 --  ================================================================================================== 
@@ -308,7 +314,7 @@ BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					-- insertamos los empleados que se ingresan hoy
-					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,Usuario,IdTipoIdentificacion,Visible)
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
 					WITH (
@@ -321,7 +327,7 @@ BEGIN
 						)
 
 					--insertamos los empleados que se han ido acumulando
-					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,Usuario,IdTipoIdentificacion,Visible)
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
 					
@@ -429,12 +435,30 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
+			delete from @marcaasistenciatempx
+			
+			INSERT INTO @marcaasistenciatempx(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
 			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3)
 				WITH (
-					FechaEntrada date,
-					FechaSalida date,
+					FechaEntrada datetime,
+					FechaSalida datetime,
 					ValorDocumentoIdentidad int
 				)
+			set @cntx = 1;
+			select @cntrendx = COUNT(0) from @marcaasistenciatempx;
+			while @cntx <= @cntrendx
+			begin
+				--insert into dbo.MovimientoHoras(IdMarcaAsistencia)
+				--select TOP 1 id from @marcaasistenciatempx WHERE id = @cntx
+
+				set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM @marcaasistenciatempx WHERE id = @cntx), (select TOP 1 FechaSalida FROM @marcaasistenciatempx WHERE id = @cntx))
+				set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM @marcaasistenciatempx WHERE id = @cntx)))   )
+
+				set @cntx = @cntx +1
+			end
+
+
+
 		end
 
 	IF (@Fecha_Actual = @Fin_Semana)
