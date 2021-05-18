@@ -1,7 +1,7 @@
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -133,8 +133,14 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
+DELETE FROM dbo.DeduccionesXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('DeduccionesXEmpleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.Jornada/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('Jornada', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
+
+
 
 -- esta tabla es para guardar las operaciones que vamos a hacer, donde cada fila es un dia diferente
 DECLARE @TablaOperaciones TABLE(
@@ -302,7 +308,7 @@ BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					-- insertamos los empleados que se ingresan hoy
-					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,Usuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
 					WITH (
@@ -315,11 +321,10 @@ BEGIN
 						)
 
 					--insertamos los empleados que se han ido acumulando
-					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,Usuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
 					
-					SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
 				end
 			-- en caso de ser un dia normal:
 			ELSE
@@ -335,17 +340,15 @@ BEGIN
 							idPuesto int,
 							idTipoDocumentacionIdentidad int
 							)
-				end			
+				end	
 		end
 
-
-
-	-- cargamos eliminar empleado
-	set @subxml = (select TOP 1 EliminarEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
+		set @subxml = (select TOP 1 EliminarEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			-- en caso de ser fin de semana:
+			Select FinSema = @Fin_Semana
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					Update Empleado
@@ -355,7 +358,6 @@ BEGIN
 						ValorDocumentoIdentidad varchar(16)
 					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
 
-					SELECT * FROM Empleado
 				end
 			-- si es otro dia:
 			ELSE
@@ -369,41 +371,43 @@ BEGIN
 				end
 		end
 
-
-
-
-	-- cargamos asocia empleado con deduccion en caso de que haya
+		-- cargamos asocia empleado con deduccion en caso de que haya
 	set @subxml = (select TOP 1 AsociaEmpleadoConDeduccion FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
-					SELECT * FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
-					WITH (
-						IdDeduccion int,
-						Monto money,
-						ValorDocumentoIdentidad int
-					)
-				end			
+					INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
+						SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,Monto,1
+						FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
+							WITH (
+								IdDeduccion int,
+								ValorDocumentoIdentidad int,
+								Monto money
+							) cr
+				end
 		end
 
-	-- cargamos desasocia empleado con deduccion en caso de que haya
+		-- cargamos desasocia empleado con deduccion en caso de que haya
 	set @subxml = (select TOP 1 DesasociaEmpleadoConDeduccion FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			if(@Fecha_Actual = @Fin_Semana)
 			begin
-				SELECT * FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3)
-					WITH (
+				Update dbo.DeduccionesXEmpleado
+					SET Visible = 0
+					FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3)
+					WITH(
 						IdDeduccion int,
-						ValorDocumentoIdentidad int
-					)
+						ValorDocumentoIdentidad varchar(16)
+					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
+					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 			end
 		end
 
-	-- cargamos tipo de jornada en caso de que haya
+		-- cargamos tipo de jornada en caso de que haya
 	set @subxml = (select TOP 1 TipoDeJornadaProximaSemana FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
@@ -420,7 +424,7 @@ BEGIN
 			--end
 		end
 
-	-- cargamosmarca de asistencia en caso de que haya
+		-- cargamosmarca de asistencia en caso de que haya
 	set @subxml = (select TOP 1 MarcaDeAsistencia FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
@@ -433,7 +437,9 @@ BEGIN
 				)
 		end
 
-
-	
+	IF (@Fecha_Actual = @Fin_Semana)
+		begin
+			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
+		end
 	SET @CursorTestID = @CursorTestID + 1 
-END
+end
