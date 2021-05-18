@@ -893,4 +893,57 @@ COMMIT
 
 
 
+BEGIN TRANSACTION
+GO
+CREATE TABLE dbo.Tmp_MarcasAsistencia
+	(
+	ID int NOT NULL,
+	FechaEntrada datetime NOT NULL,
+	FechaSalida datetime NOT NULL,
+	Cedula varchar(24) NOT NULL
+	)  ON [PRIMARY]
+GO
+ALTER TABLE dbo.Tmp_MarcasAsistencia SET (LOCK_ESCALATION = TABLE)
+GO
+IF EXISTS(SELECT * FROM dbo.MarcasAsistencia)
+	 EXEC('INSERT INTO dbo.Tmp_MarcasAsistencia (ID, FechaEntrada, FechaSalida)
+		SELECT ID, FechaEntrada, FechaSalida FROM dbo.MarcasAsistencia WITH (HOLDLOCK TABLOCKX)')
+GO
+ALTER TABLE dbo.MovimientoHoras
+	DROP CONSTRAINT [FK_dbo.MovimientoHoras_dbo.MarcasAsistencia]
+GO
+DROP TABLE dbo.MarcasAsistencia
+GO
+EXECUTE sp_rename N'dbo.Tmp_MarcasAsistencia', N'MarcasAsistencia', 'OBJECT' 
+GO
+ALTER TABLE dbo.MarcasAsistencia ADD CONSTRAINT
+	[PK_dbo.MarcasAsistencia] PRIMARY KEY CLUSTERED 
+	(
+	ID
+	) WITH( STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.MovimientoHoras ADD CONSTRAINT
+	[FK_dbo.MovimientoHoras_dbo.MarcasAsistencia] FOREIGN KEY
+	(
+	IdMarcaAsistencia
+	) REFERENCES dbo.MarcasAsistencia
+	(
+	ID
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
+GO
+ALTER TABLE dbo.MovimientoHoras SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+
+
+
+
+
+
 
