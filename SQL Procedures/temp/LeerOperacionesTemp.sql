@@ -137,6 +137,12 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
+DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoHoras', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MarcasAsistencia', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.DeduccionesXEmpleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('DeduccionesXEmpleado', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.Jornada/*Limpia la tabla Empleados*/
@@ -287,11 +293,11 @@ ORDER  BY ID
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
 
-declare @cntx int = 1;
-declare @cntrendx int;
-declare @monto money = 0
-declare @horas int
-declare @marcaasistenciatempx TABLE(id int identity(1,1) primary key,FechaEntrada datetime,FechaSalida datetime,ValorDocumentoIdentidad int)
+--declare @cntx int = 1;
+--declare @cntrendx int;
+--declare @monto money = 0
+--declare @horas int
+--declare @marcaasistenciatempx TABLE(id int identity(1,1) primary key,FechaEntrada datetime,FechaSalida datetime,ValorDocumentoIdentidad int)
 			
 --  ==================================================================================================
 --  || este loop es el que hace las operaciones, de momento lo unico que hace es imprimir los datos ||
@@ -477,27 +483,32 @@ BEGIN
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			delete from @marcaasistenciatempx
 			
-			INSERT INTO @marcaasistenciatempx(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
+			--Por el momento no borremos las marcas diariamente, hagamos luego la guarde en otra tabla o que sean visibles o que las elimine por mes
+			--Por que si se hace de manera diaria el Trigger se vuelve loco
+			
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
 			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3)
 				WITH (
 					FechaEntrada datetime,
 					FechaSalida datetime,
 					ValorDocumentoIdentidad int
 				)
-			set @cntx = 1;
-			select @cntrendx = COUNT(0) from @marcaasistenciatempx;
-			while @cntx <= @cntrendx
-			begin
+				
+				
+			
+			--set @cntx = 1;
+			--select @cntrendx = COUNT(0) from @marcaasistenciatempx;
+			--while @cntx <= @cntrendx
+			--begin
 				--insert into dbo.MovimientoHoras(IdMarcaAsistencia)
 				--select TOP 1 id from @marcaasistenciatempx WHERE id = @cntx
 
-				set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM @marcaasistenciatempx WHERE id = @cntx), (select TOP 1 FechaSalida FROM @marcaasistenciatempx WHERE id = @cntx))
-				set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM @marcaasistenciatempx WHERE id = @cntx)))   )
+				--set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM @marcaasistenciatempx WHERE id = @cntx), (select TOP 1 FechaSalida FROM @marcaasistenciatempx WHERE id = @cntx))
+				--set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM @marcaasistenciatempx WHERE id = @cntx)))   )
 
-				set @cntx = @cntx +1
-			end
+				--set @cntx = @cntx +1
+			--end
 			exec sp_xml_removedocument @hdoc
 
 
@@ -510,4 +521,3 @@ BEGIN
 		end
 	SET @CursorTestID = @CursorTestID + 1 
 end
-
