@@ -29,7 +29,8 @@ BEGIN
 			DELETE FROM [dbo].[Puestos]
 			DELETE FROM [dbo].[TipoDocIdent]
 			DELETE FROM [dbo].[Usuarios]
-					WHERE Username != 'admin'
+					WHERE ID > 2
+			DBCC CHECKIDENT ('Usuarios', RESEED, 2)/*Reinicia el identify*/
 			
 		COMMIT TRANSACTION;  -- Garantiza el todo 
 			--(respecto del todo o nada, de la A de ACID, atomico)

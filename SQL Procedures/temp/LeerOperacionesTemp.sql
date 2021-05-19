@@ -1,5 +1,5 @@
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
- 
+
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
 FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
@@ -10,9 +10,13 @@ DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
 
 
+
 --  ============================
 --  || cargamos los catalogos ||
 --  ============================ 
+declare @lolop int
+exec ReiniciarBD @lolop
+
 
 INSERT INTO dbo.Puestos(ID,Nombre,SalarioXHora,Visible)
 SELECT Id,Nombre,SalarioXHora,1
@@ -178,7 +182,7 @@ WITH (
 	TipoDeJornadaProximaSemana XML,
 	MarcaDeAsistencia XML
 )
-
+exec sp_xml_removedocument @hdoc
 DECLARE @Fin_Semana DATE = (SELECT TOP (1) [Fecha] FROM @TablaOperaciones);
 
 SELECT [Fin_Semana] = @Fin_Semana;
@@ -252,7 +256,7 @@ BEGIN
 	SET @CursorTestID = @CursorTestID + 1 
 END
 
-select * from @TablaOperaciones
+
 
 
 --reiniciamos todo lo necesario para iterar de nuevo
@@ -269,6 +273,7 @@ DECLARE @NuevoEmpleadoTemp TABLE(
 						idDepartamento int,
 						ValorDocumentoIdentidad int,
 						idPuesto int,
+						idUsuario int,
 						idTipoDocumentacionIdentidad int
 						)
 
@@ -276,7 +281,8 @@ DECLARE @EliminarEmpleadoTemp TABLE(
 						ValorDocumentoIdentidad VARCHAR(16)
 						)
 
-
+select * from @TablaOperaciones
+ORDER  BY ID
 
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
@@ -298,10 +304,22 @@ BEGIN
 	SELECT [Fecha_Actual] = @Fecha_Actual
 
 
-
-
-
-
+	-- cargamos los usuarios de nuevo empleado
+	set @subxml = (select TOP 1 NuevoEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
+	--si no es nulo realizamos la insercion del empleado
+	if (@subxml is not null)
+		begin
+			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
+						-- insertamos los empleados que se ingresan hoy
+						INSERT INTO dbo.Usuarios (Username,Pwd,Tipo)
+						SELECT Username,Password,2
+						FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
+						WITH(
+							Username varchar(64),
+							Password varchar(64)
+							)
+			exec sp_xml_removedocument @hdoc
+		end
 
 
 	-- cargamos nuevo empleado en caso de que haya
@@ -326,6 +344,23 @@ BEGIN
 						idTipoDocumentacionIdentidad int
 						)
 
+
+
+
+					Update dbo.Empleado
+					SET IdUsuario = (Select top 1 ID from dbo.Usuarios c where c.username = XMLDATA.Username and c.Pwd = XMLDATA.Password)
+					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
+					WITH(
+						Username varchar(64),
+						Password varchar(64),
+						ValorDocumentoIdentidad int
+					) XMLDATA
+					where IdUsuario = 1 and dbo.Empleado.ValorDocumentoIdentidad = XMLDATA.ValorDocumentoIdentidad
+					
+					
+
+
+
 					--insertamos los empleados que se han ido acumulando
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
@@ -335,8 +370,8 @@ BEGIN
 			-- en caso de ser un dia normal:
 			ELSE
 				begin
-					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idTipoDocumentacionIdentidad)
-						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,idTipoDocumentacionIdentidad
+					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idUsuario,idTipoDocumentacionIdentidad)
+						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad
 						FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
 						WITH (
 							FechaNacimiento DATE,
@@ -346,7 +381,10 @@ BEGIN
 							idPuesto int,
 							idTipoDocumentacionIdentidad int
 							)
-				end	
+						
+
+				end
+			exec sp_xml_removedocument @hdoc
 		end
 
 		set @subxml = (select TOP 1 EliminarEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
@@ -375,6 +413,7 @@ BEGIN
 						ValorDocumentoIdentidad varchar(16)
 					)
 				end
+			exec sp_xml_removedocument @hdoc
 		end
 
 		-- cargamos asocia empleado con deduccion en caso de que haya
@@ -393,6 +432,7 @@ BEGIN
 								Monto money
 							) cr
 				end
+			exec sp_xml_removedocument @hdoc
 		end
 
 		-- cargamos desasocia empleado con deduccion en caso de que haya
@@ -411,6 +451,7 @@ BEGIN
 					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 			end
+			exec sp_xml_removedocument @hdoc
 		end
 
 		-- cargamos tipo de jornada en caso de que haya
@@ -428,6 +469,7 @@ BEGIN
 							ValorDocumentoIdentidad int
 						) cr
 			--end
+			exec sp_xml_removedocument @hdoc
 		end
 
 		-- cargamosmarca de asistencia en caso de que haya
@@ -456,6 +498,7 @@ BEGIN
 
 				set @cntx = @cntx +1
 			end
+			exec sp_xml_removedocument @hdoc
 
 
 
@@ -467,3 +510,4 @@ BEGIN
 		end
 	SET @CursorTestID = @CursorTestID + 1 
 end
+
