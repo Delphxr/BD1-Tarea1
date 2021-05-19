@@ -1,0 +1,31 @@
+CREATE TRIGGER trgMovimientoMarca
+ON dbo.MarcasAsistencia
+FOR INSERT
+AS
+BEGIN
+	DECLARE @cntx int = 1;
+	DECLARE @cntrendx int;
+	DECLARE @monto money = 0
+	DECLARE @horas int
+	DECLARE @IdMarca int
+	SELECT @IdMarca = i.ID FROM inserted i 
+	SET @cntx =@IdMarca;
+	SELECT @cntrendx = COUNT(0) FROM dbo.MarcasAsistencia;
+	WHILE @cntx <= @cntrendx
+	begin
+		SET @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @cntx), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @cntx))
+		SET @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
+		begin transaction Plantilla
+			INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
+			SELECT TOP 1 FechaSalida,@monto,1 FROM dbo.MarcasAsistencia WHERE MarcasAsistencia.ID = @cntx
+		commit transaction Plantilla
+		begin transaction Hora
+			INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
+			SELECT TOP 1 ID,@cntx FROM dbo.MovimientoPlanilla WHERE ID = @cntx
+		commit transaction Hora
+
+		SET @cntx = @cntx +1
+
+		
+	end
+END
