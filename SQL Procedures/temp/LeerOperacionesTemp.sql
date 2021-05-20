@@ -137,8 +137,7 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
-DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('MovimientoHoras', RESEED, 0)/*Reinicia el identify*/
+
 DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
@@ -430,7 +429,7 @@ BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
-						SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,Monto,1
+						SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
 						FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
 							WITH (
 								IdDeduccion int,
@@ -487,7 +486,7 @@ BEGIN
 			--Por el momento no borremos las marcas diariamente, hagamos luego la guarde en otra tabla o que sean visibles o que las elimine por mes
 			--Por que si se hace de manera diaria el Trigger se vuelve loco
 			
-			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
 			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3)
 				WITH (
 					FechaEntrada datetime,
