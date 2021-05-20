@@ -45,12 +45,19 @@ def login():
         password = request.form["password"]
 
         usuarios = Logic.get_administradores() #obtenemos los usuarios de la BD
+        
 
         for usuario in usuarios:
             if usuario[0] == username and usuario[1] == password:
                 session["user"] = username
                 session["password"] = password
                 session["permiso"] = usuario[2]
+
+                #obtenemos el nombre del usuario y su id:
+                datos_usuario = Logic.get_empleados_by_User(usuario[3])
+                session["name"] = datos_usuario[1]
+                session["user_id"] = datos_usuario[0]
+
                 return redirect(url_for("home"))
         return render_template("login.html")
     else:
@@ -77,7 +84,7 @@ def logout():
 @app.route("/home/")
 def home():
     if verificar_sesion(): 
-        return render_template("homepage.html", permiso=session["permiso"])
+        return render_template("homepage.html", permiso=session["permiso"], nombre=session["name"])
     else:
         return redirect(url_for("login")) 
 
@@ -328,20 +335,22 @@ def ocultar_empleado(empleado,origen):
 #pagina de planilla semanal
 @app.route("/listar_semana_planilla/")
 def listar_semana_planilla():
-    if verificar_sesion():
+    if verificar_sesion() and not has_permisos():
         return render_template("listar_semana.html",
                                 planillas=[(0,"uno","dos","tres","cuatro","cinco","seis"),(1,"hola","hola","hola","hola","hola","hola")],
                                 detalles_salario=[[["Lunes","papa","papa","papa","papa","papa","papa"],["Martes","papa","papa","papa","papa","papa","papa"]],[["Lunes","chayote","chayote","chayote","chayote","chayote","papa"],["Miercoles","chayote","chayote","chayote","chayote","chayote","papa"]]],
                                 deducciones=[[["Caja","15","3200"],["Salud","46","35000"]],[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
+        flash("No hay nada que ver aquí", "info")
         return redirect(url_for("login")) 
 
 #pagina de planilla año
 @app.route("/listar_anno_planilla/")
 def listar_anno_planilla():
-    if verificar_sesion():
+    if verificar_sesion() and not has_permisos():
         return render_template("listar_anno.html", planillas=[(0,"hola","hola","hola","fin")], deducciones=[[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
+        flash("No hay nada que ver aquí", "info")
         return redirect(url_for("login")) 
 
 

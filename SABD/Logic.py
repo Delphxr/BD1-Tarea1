@@ -30,6 +30,15 @@ def get_empleados():
 def get_empleados_by_id(Id):
     return DataBaseEmpleados.get_empleados_by_ID(Id)
 
+def get_empleados_by_User(Id):
+    empleado = DataBaseEmpleados.get_empleados_by_User(Id)
+    if empleado == ():
+        empleado = (0,"Administrador")
+    else:
+        empleado = empleado[0]
+
+    return empleado
+
 def insert_empleado(Nombre, IdTipoIdentificacion ,ValorDocumentoIdentificacion, IdDepartamento, Puesto, FechaNacimiento):
     """[insertamos un elemento a la tabla de empleados de la base de datos]
 

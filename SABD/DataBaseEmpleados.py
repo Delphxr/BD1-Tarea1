@@ -166,6 +166,30 @@ def get_empleados_by_ID(Id):
     cursor.close()
     return (empleado)
 
+def get_empleados_by_User(Id):
+    """[obtenemos el empleado con el id del usuario]
+
+    Args:
+        Id ([int]): [id del usuario a pedir]
+
+    Returns:
+        [tuple]: [tuplo con el empleado]
+    """    
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetEmpleadosByUsuario
+            ?,
+            @OutResultCode OUTPUT
+        """,(Id)
+    )
+    empleado = tuple(cursor)
+    cursor.close()
+    return (empleado)
+
 def insertar_empleado_BD(Nombre,TipoDI, ValorDI,Departamento,Puesto,FechaNacimiento):
     """[Insertamos un empleado a la BD]
 
