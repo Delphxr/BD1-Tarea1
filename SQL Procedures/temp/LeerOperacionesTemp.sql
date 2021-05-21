@@ -137,6 +137,8 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
+DELETE FROM dbo.PlanillaXSemanaXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('PlanillaXSemanaXEmpleado', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.PlanillaXMesXEmpleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('PlanillaXMesXEmpleado', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.SemanaPlanilla/*Limpia la tabla Empleados*/
@@ -505,7 +507,7 @@ BEGIN
 					ValorDocumentoIdentidad int
 				)
 				
-				
+			EXEC dbo.SPMovimientoMarca @Fecha_Actual	
 			
 			--set @cntx = 1;
 			--select @cntrendx = COUNT(0) from @marcaasistenciatempx;
