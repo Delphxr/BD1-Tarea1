@@ -1,3 +1,6 @@
+DROP TRIGGER trgMovimientoMarca
+GO
+
 CREATE TRIGGER trgMovimientoMarca
 ON dbo.MarcasAsistencia
 FOR INSERT
@@ -20,9 +23,41 @@ BEGIN
 			SELECT TOP 1 FechaSalida,@monto,1 FROM dbo.MarcasAsistencia WHERE MarcasAsistencia.ID = @cntx
 		commit transaction Plantilla
 		begin transaction Hora
+			SET IDENTITY_INSERT dbo.MovimientoHoras ON
 			INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
 			SELECT TOP 1 ID,@cntx FROM dbo.MovimientoPlanilla WHERE ID = @cntx
+			SET IDENTITY_INSERT dbo.MovimientoHoras OFF
 		commit transaction Hora
+		begin transaction PlantillaMesEmpleado
+			DECLARE @Fecha_Actual date
+			SET @Fecha_Actual = (SELECT FechaEntrada FROM dbo.MarcasAsistencia WHERE ID = @cntx) 
+			IF EXISTS (SELECT TOP 1 P.IdEmpleado FROM dbo.PlanillaXMesXEmpleado P inner join dbo.Empleado E ON E.ID = P.IdEmpleado
+			inner join MarcasAsistencia MA ON MA.ValorDocumentoIdentificacion = E.ValorDocumentoIdentidad and MA.ID = @cntx)
+				begin
+					IF ((SELECT TOP 1 FechaInicio FROM dbo.MesPlanilla ORDER BY FechaInicio DESC) = (@Fecha_Actual))
+						begin
+							INSERT INTO dbo.PlanillaXMesXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,idMes)
+							SELECT TOP 1 @monto,@monto,0,E.ID,M.ID FROM dbo.Empleado E 
+							inner join MarcasAsistencia MA ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and MA.ID = @cntx
+							inner join dbo.MesPlanilla M ON MA.FechaSalida BETWEEN M.FechaInicio and M.FechaFin
+						end
+					ELSE
+						begin
+							UPDATE P
+							SET SalarioBruto = SalarioBruto+@monto ,SalarioNeto = SalarioNeto+@monto
+							FROM dbo.PlanillaXMesXEmpleado P inner join dbo.Empleado E on P.IdEmpleado = E.ID 
+							inner join MarcasAsistencia MA ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and MA.ID = @cntx
+							inner join dbo.MesPlanilla M ON MA.FechaSalida BETWEEN M.FechaInicio and M.FechaFin
+						end
+				end
+			ELSE
+				begin
+					INSERT INTO dbo.PlanillaXMesXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,idMes)
+					SELECT TOP 1 @monto,@monto,0,E.ID,M.ID FROM dbo.Empleado E 
+					inner join MarcasAsistencia MA ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and MA.ID = @cntx
+					inner join dbo.MesPlanilla M ON MA.FechaSalida BETWEEN M.FechaInicio and M.FechaFin
+				end
+		commit transaction PlantillaMesEmpleado
 
 		SET @cntx = @cntx +1
 
