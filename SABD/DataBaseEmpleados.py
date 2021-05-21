@@ -357,6 +357,23 @@ def limpiar_tablas():
     conn.commit()
     cursor.close()
 
+def get_planillas_semana(Id):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetPlanillaSemana
+            ?,
+            @OutResultCode OUTPUT
+        """,(Id)
+    )
+    planillas = tuple(cursor)
+    print(planillas)
+    cursor.close()
+    return (planillas)
+
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

@@ -149,6 +149,14 @@ def get_administradores():
     
     return administradores
 
+def get_planilla_semana(id):
+    #Salario Bruto	Deducciones  	Salario Neto	Horas Ordinarias	Horas Extra Normales	Horas Extra Dobles
+    #[ID],[SalarioBruto],[TotalDeducciones],[SalarioNeto],[IdEmpleado],[IdSemana],[IdMovimientoPlanilla],[IdPlanillaXMesXEmpleado]
+    planillas = DataBaseEmpleados.get_planillas_semana(id)
+    for planilla in planillas:
+        planilla = [planilla[1],planilla[2],planilla[3],10,11,12]
+    return planillas
+
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()
 

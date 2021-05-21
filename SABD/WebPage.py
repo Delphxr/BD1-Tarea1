@@ -337,7 +337,7 @@ def ocultar_empleado(empleado,origen):
 def listar_semana_planilla():
     if verificar_sesion() and not has_permisos():
         return render_template("listar_semana.html",
-                                planillas=[(0,"uno","dos","tres","cuatro","cinco","seis"),(1,"hola","hola","hola","hola","hola","hola")],
+                                planillas=Logic.get_planilla_semana(session["user_id"]) ,
                                 detalles_salario=[[["Lunes","papa","papa","papa","papa","papa","papa"],["Martes","papa","papa","papa","papa","papa","papa"]],[["Lunes","chayote","chayote","chayote","chayote","chayote","papa"],["Miercoles","chayote","chayote","chayote","chayote","chayote","papa"]]],
                                 deducciones=[[["Caja","15","3200"],["Salud","46","35000"]],[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
