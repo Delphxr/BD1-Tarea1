@@ -137,7 +137,15 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
-
+DELETE FROM dbo.PlanillaXMesXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('PlanillaXMesXEmpleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.SemanaPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoHoras', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
@@ -195,6 +203,9 @@ SELECT [Fin_Semana] = @Fin_Semana;
 DECLARE @Fin_Mes DATE = DATEADD(WEEK,3,(SELECT TOP (1) [Fecha] FROM @TablaOperaciones));
 
 SELECT [Fin_Mes] = @Fin_Mes;
+
+INSERT INTO dbo.MesPlanilla(FechaInicio,FechaFin)
+VALUES(@Fin_Semana,@Fin_Mes)
 
 DECLARE @CursorTestID INT = 1; --cursor para iterar por la tabla
 
@@ -514,8 +525,18 @@ BEGIN
 
 		end
 
+	IF (@Fecha_Actual = @Fin_Mes)
+		begin
+			INSERT INTO dbo.MesPlanilla(FechaInicio,FechaFin)
+			VALUES(DATEADD(DAY,1,@Fin_Mes),DATEADD(WEEK,4,@Fin_Mes))
+
+			SET @Fin_Mes = DATEADD(WEEK,4,@Fin_Mes)
+		end
+	
 	IF (@Fecha_Actual = @Fin_Semana)
 		begin
+			INSERT INTO dbo.SemanaPlanilla(FechaInicio,Fechafin,IdMes)
+			SELECT DATEADD(DAY,1,@Fin_Semana),DATEADD(WEEK,1,@Fin_Semana),ID FROM dbo.MesPlanilla WHERE DATEADD(DAY,1,@Fin_Semana) BETWEEN MesPlanilla.FechaInicio and MesPlanilla.FechaFin
 			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
 		end
 	SET @CursorTestID = @CursorTestID + 1 
