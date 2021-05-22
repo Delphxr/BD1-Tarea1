@@ -145,9 +145,10 @@ DELETE FROM dbo.SemanaPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MovimientoDeduccion/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoDeduccion', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MovimientoHoras', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
@@ -469,6 +470,7 @@ BEGIN
 					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 			end
+			EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
 			exec sp_xml_removedocument @hdoc
 		end
 
