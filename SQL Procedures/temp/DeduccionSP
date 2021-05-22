@@ -1,0 +1,33 @@
+DROP PROCEDURE SPMovimientoDeduccion
+GO
+
+CREATE PROCEDURE SPMovimientoDeduccion @Fecha_Actual date
+AS
+	declare @cntx int = 1
+	declare @cntrendx int
+	declare @monto money = 0
+
+	set @cntx = 1;
+	select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
+	while @cntx <= @cntrendx
+	begin
+		IF (SELECT T.Porcentual FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D ON D.ID = @cntx and T.ID = D.IdTipoDeduccion ) = 1
+			begin
+				SET @monto = (SELECT Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)*(SELECT Valor FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D on D.ID = @cntx and D.IdTipoDeduccion = T.ID)
+				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
+				SELECT @Fecha_Actual,@monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int)
+				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx
+			end
+		ELSE
+			begin
+				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
+				SELECT @Fecha_Actual,Monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int) 
+				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx	
+			end
+		INSERT INTO dbo.MovimientoDeduccion (IdTipoDeduccion)
+		SELECT IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx	
+
+	set @cntx = @cntx +1
+	end
+
+GO
