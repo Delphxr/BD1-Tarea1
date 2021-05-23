@@ -1,0 +1,23 @@
+DROP PROCEDURE SPMOVIMIENTOS2
+GO
+
+CREATE PROCEDURE SPMOVIMIENTOS2  @Fecha_Actual date
+AS
+	declare @cntx int = 1
+	declare @cntrendx int
+
+	set @cntx = 1;
+	select @cntrendx = COUNT(0) from dbo.MovimientoPlanilla;
+	while @cntx <= @cntrendx
+
+	begin
+		
+				INSERT INTO dbo.DeduccionesXMesXEmpleado(Monto,IdMovimiento,IdEmpleado,IdMes,IdPlanillaXMesXEmpleado)
+				SELECT MP.Monto,MP.ID,MP.IdEmpleado,M.ID,PM.ID FROM dbo.MovimientoPlanilla MP
+				inner join dbo.PlanillaXMesXEmpleado PM ON MP.ID = @cntx and MP.IdEmpleado = PM.IdEmpleado and MP.Fecha = @Fecha_Actual and (MP.IdTipoMov = 5 or MP.IdTipoMov = 4)
+				inner join dbo.MesPlanilla M ON MP.Fecha BETWEEN M.FechaInicio and M.FechaFin
+	
+	set @cntx = @cntx +1
+	end
+
+GO
