@@ -542,6 +542,13 @@ BEGIN
 			INSERT INTO dbo.SemanaPlanilla(FechaInicio,Fechafin,IdMes)
 			SELECT DATEADD(DAY,1,@Fin_Semana),DATEADD(WEEK,1,@Fin_Semana),ID FROM dbo.MesPlanilla WHERE DATEADD(DAY,1,@Fin_Semana) BETWEEN MesPlanilla.FechaInicio and MesPlanilla.FechaFin
 			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
+			EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
 		end
+		
+	EXEC dbo.SPMOVIMIENTOS @Fecha_Actual
+	
+	UPDATE dbo.MovimientoPlanilla
+	SET Visible = 0
+	
 	SET @CursorTestID = @CursorTestID + 1 
 end
