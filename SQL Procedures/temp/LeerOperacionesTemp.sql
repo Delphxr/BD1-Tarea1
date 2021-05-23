@@ -137,6 +137,8 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================ 
 
+DELETE FROM dbo.DeduccionesXMesXEmpleado
+DBCC CHECKIDENT ('DeduccionesXMesXEmpleado', RESEED, 0)
 DELETE FROM dbo.PlanillaXSemanaXEmpleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('PlanillaXSemanaXEmpleado', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.PlanillaXMesXEmpleado/*Limpia la tabla Empleados*/
@@ -546,9 +548,8 @@ BEGIN
 		end
 		
 	EXEC dbo.SPMOVIMIENTOS @Fecha_Actual
+	EXEC dbo.SPMOVIMIENTOS2 @Fecha_Actual
 	
-	UPDATE dbo.MovimientoPlanilla
-	SET Visible = 0
 	
 	SET @CursorTestID = @CursorTestID + 1 
 end
