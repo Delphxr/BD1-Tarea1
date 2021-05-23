@@ -14,18 +14,16 @@ AS
 		IF (SELECT T.Porcentual FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D ON D.ID = @cntx and T.ID = D.IdTipoDeduccion ) = 1
 			begin
 				SET @monto = (SELECT Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)*(SELECT Valor FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D on D.ID = @cntx and D.IdTipoDeduccion = T.ID)
-				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
-				SELECT @Fecha_Actual,@monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int)
-				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx
+				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado)
+				SELECT @Fecha_Actual,@monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int),IdEmpleado
+				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx and Visible = 1
 			end
 		ELSE
 			begin
-				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
-				SELECT @Fecha_Actual,Monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int) 
-				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx	
-			end
-		INSERT INTO dbo.MovimientoDeduccion (IdTipoDeduccion)
-		SELECT IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx	
+				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+				SELECT @Fecha_Actual,Monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int),IdEmpleado,1 
+				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx and Visible = 1
+			end	
 
 	set @cntx = @cntx +1
 	end
