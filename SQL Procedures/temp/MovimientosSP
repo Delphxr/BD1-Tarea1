@@ -83,7 +83,7 @@ AS
 					begin
 						UPDATE P
 						SET SalarioBruto = SalarioBruto + Monto, SalarioNeto = SalarioNeto + Monto, IdMovimientoPlanilla = MP.ID
-						FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and P.IdSemana= (SELECT TOP 1 ID FROM dbo.SemanaPlanilla ORDER BY FechaInicio DESC) and MP.Fecha = @Fecha_Actual
+						FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and MP.Fecha = @Fecha_Actual
 						--SELECT P.IdEmpleado,SalarioBruto,Monto FROM dbo.PlanillaXSemanaXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado 
 					end
 			end
