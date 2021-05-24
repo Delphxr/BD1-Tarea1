@@ -408,6 +408,22 @@ def get_planillas_mes(Id):
     cursor.close()
     return (planillas)
 
+
+def get_feriados():
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetFeriados
+            @OutResultCode OUTPUT
+        """
+    )
+    feriados = tuple(cursor)
+    cursor.close()
+    return (feriados)
+
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

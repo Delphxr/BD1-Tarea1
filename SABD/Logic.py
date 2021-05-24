@@ -153,7 +153,13 @@ def get_administradores():
 def get_planilla_semana(id):
     dias_semana = ["Viernes","Sabado","Domingo","Lunes","Martes","Miercoles","Jueves"]
     planillas = DataBaseEmpleados.get_planillas_semana(id)
+    feriados = DataBaseEmpleados.get_feriados()
+    lista_feriados = []
+    for f in feriados:
+        lista_feriados += [datetime.strptime(f[1], '%Y-%m-%d').date()]
     marcas_dias = []
+
+    salarioxhora = float(get_puestos_by_id(get_empleados_by_id(id)[0][5])[0][2])
 
     planillas = list(planillas)
 
@@ -162,38 +168,48 @@ def get_planilla_semana(id):
     while counter2 < len(planillas):
         horas_normales_semana = 0
         horas_extra_norm_semana = 0
+        horas_extra_doble_semana = 0
 
 
         marcas_semana = DataBaseEmpleados.get_marcas_semana(id,planillas[counter2][5])
         
         counter = 0
         marca_temp = []
-        for marca in marcas_semana:
+        for marca in marcas_semana: 
 
             
             hora_entrada = marca[1]
             hora_salida = marca[2]
-            horas = hora_salida - hora_entrada
+            horas = marca[3]
         
-            horas = horas.seconds//3600 #redondeamos las horas
             horas_extra_normales = 0
             horas_extra_dobles = 0
 
             if (horas > 8):
-                horas_extra_normales = horas-8
+                if hora_salida.strftime('%A') == "Sunday" or hora_salida.date() in lista_feriados:
+                    horas_extra_dobles = horas-8
+                else:
+                    horas_extra_normales = horas-8
                 horas = 8
             
-            marca_temp += [[dias_semana[counter],hora_entrada.strftime("%I:%M:%S %p"),hora_salida.strftime("%I:%M:%S %p"),horas,horas_extra_normales,0,0]]
+
+            salario = (salarioxhora*horas) + (salarioxhora*horas_extra_normales)*1.5 + (salarioxhora*horas_extra_dobles)*2
+
+            
+
+            marca_temp += [[hora_entrada.strftime('%A'),hora_entrada.strftime("%I:%M %p"),hora_salida.strftime("%I:%M %p - %m/%d"),horas,horas_extra_normales,horas_extra_dobles,salario]]
 
             horas_normales_semana += horas
             horas_extra_norm_semana += horas_extra_normales
+            horas_extra_doble_semana += horas_extra_dobles
             counter += 1
         
         marcas_dias += [marca_temp]
         
         planillas[counter2] = list(planillas[counter2])
-        planillas[counter2] = [counter2,planillas[counter2][1],planillas[counter2][2],planillas[counter2][3],horas_normales_semana,horas_extra_norm_semana,0]
- 
+        planillas[counter2] = [counter2,float(planillas[counter2][1]),planillas[counter2][2],float(planillas[counter2][3]),horas_normales_semana,horas_extra_norm_semana,horas_extra_doble_semana]
+
+
         counter2 +=1
   
     return [planillas,marcas_dias]
