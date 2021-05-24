@@ -23,7 +23,8 @@ AS
 				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 				SELECT @Fecha_Actual,Monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int),IdEmpleado,1 
 				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx and Visible = 1
-			end	
+			end
+		
 
 	set @cntx = @cntx +1
 	end
