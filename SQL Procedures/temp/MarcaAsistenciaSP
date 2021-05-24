@@ -6,6 +6,8 @@ AS
 	declare @cntrendx int;
 	declare @monto money = 0
 	declare @horas int
+	declare @horas_extra int
+	declare @monto_adicional money=0
 
 	set @cntx = 1;
 			select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;
@@ -13,14 +15,40 @@ AS
 			begin
 				
 				set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @cntx), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @cntx))
-				set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
-				begin
-				
+				IF (@horas = 8)
+					begin
+						set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
+					end
+				IF (@horas > 8)
+					begin
+						set @monto = (8 * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
+						SET @horas_extra = @horas - 8
+						
+						IF EXISTS (SELECT Fecha FROM dbo.Feriados WHERE Fecha = @Fecha_Actual)
+							begin
+								set @monto_adicional = (2*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
+								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+								SELECT FechaSalida,@monto_adicional,3,E.ID,1 FROM dbo.MarcasAsistencia MA
+								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+
+							end
+						ELSE
+							begin
+								set @monto_adicional = (1.5*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
+								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+								SELECT FechaSalida,@monto_adicional,2,E.ID,1 FROM dbo.MarcasAsistencia MA
+								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+							end
+					
+					end
 					INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 					SELECT FechaSalida,@monto,1,E.ID,1 FROM dbo.MarcasAsistencia MA
 					inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+				
+					
+				
 
-				end
+				
 				
 				set @cntx = @cntx +1
 			end
