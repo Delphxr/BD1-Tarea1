@@ -21,6 +21,7 @@ AS
 					inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
 
 				end
+				
 				set @cntx = @cntx +1
 			end
 			--SELECT ID FROM dbo.MovimientoPlanilla WHERE Fecha = @Fecha_Actual
