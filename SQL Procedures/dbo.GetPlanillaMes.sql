@@ -1,4 +1,4 @@
-ALTER PROCEDURE [dbo].[GetPlanillaSemana]
+ALTER PROCEDURE [dbo].[GetPlanillaMes]
 	-- parametros de entrada
 	@InEmpleadoId INT
 	-- parametros de salida
@@ -11,7 +11,7 @@ BEGIN
 		SELECT
 			@OutResultCode=0  -- codigo de ejecucion exitoso
 
-		IF NOT EXISTS(SELECT 1 FROM [dbo].[PlanillaXSemanaXEmpleado] P WHERE P.IdEmpleado=@InEmpleadoId)
+		IF NOT EXISTS(SELECT 1 FROM [dbo].[PlanillaXMesXEmpleado] P WHERE P.IdEmpleado=@InEmpleadoId)
 		BEGIN
 			Set @OutResultCode=50001; -- el puesto no existe
 			RETURN
@@ -19,15 +19,13 @@ BEGIN
 
 
 
-		SELECT TOP 15 [ID]
+		SELECT [ID]
+		  ,[SalarioNeto]
 		  ,[SalarioBruto]
 		  ,[TotalDeducciones]
-		  ,[SalarioNeto]
 		  ,[IdEmpleado]
-		  ,[IdSemana]
-		  ,[IdMovimientoPlanilla]
-		  ,[IdPlanillaXMesXEmpleado]
-		FROM [dbo].[PlanillaXSemanaXEmpleado] WHERE [IdEmpleado]=@InEmpleadoId ORDER BY ID DESC
+		  ,[idMes]
+		 FROM [dbo].[PlanillaXMesXEmpleado]  where IdEmpleado=@InEmpleadoId ORDER BY ID DESC
 	END TRY
 	BEGIN CATCH
 		Set @OutResultCode=50005;

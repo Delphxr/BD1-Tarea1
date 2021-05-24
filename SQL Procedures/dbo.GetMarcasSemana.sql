@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.GetMarcasSemana
+ALTER PROCEDURE [dbo].[GetMarcasSemana]
 	-- parametros de entrada
 	@InEmpleadoId INT
 	,@InSemanaId INT
@@ -24,29 +24,22 @@ BEGIN
 			RETURN
 		END;
 
-		DECLARE @tablaMovSemanaTemp Table(IDMovPlanilla int)
-		DECLARE @tablaMovHorasTemp Table(IDMarcas int)
+		--DECLARE @InEmpleadoId int =2
+		--DECLARE @InSemanaId int =2
+		DECLARE @fechaInicioSemana datetime
+		DECLARE @fechaFinSemana datetime
+		DECLARE @cedulaEmpleado varchar(24)
 		
-		--obtenemos los movimientos de la semana
-		INSERT INTO @tablaMovSemanaTemp(IDMovPlanilla)
-		SELECT [IdMovimientoPlanilla]
-		FROM [dbo].[PlanillaXSemanaXEmpleado] WHERE IdSemana = @InSemanaId and IdEmpleado = @InEmpleadoId
-
-		--obtenemos los id de los movimientos de horas de la semana
-		INSERT INTO @tablaMovHorasTemp(IDMarcas)
-		SELECT IdMarcaAsistencia
-		FROM dbo.MovimientoHoras WHERE EXISTS (SELECT 1 
-											   FROM   @tablaMovSemanaTemp t
-											   WHERE  t.IDMovPlanilla = ID)
+		SET @cedulaEmpleado = (Select top 1 ValorDocumentoIdentidad from dbo.Empleado where id = @InEmpleadoId)
+		
+		SET @fechaInicioSemana = (select top 1 FechaInicio from dbo.SemanaPlanilla where id = @InSemanaId)
+		SET @fechaFinSemana = (select top 1 FechaFin from dbo.SemanaPlanilla where id = @InSemanaId)
 
 		--retornamos las marcas
 		SELECT [ID]
 			  ,[FechaEntrada]
 			  ,[FechaSalida]
-			  ,[ValorDocumentoIdentidad]
-		  FROM [dbo].[MarcasAsistencia] WHERE EXISTS (SELECT 1 
-													FROM   @tablaMovHorasTemp t
-													WHERE  t.IDMarcas = ID)
+		  FROM [dbo].[MarcasAsistencia] WHERE ValorDocumentoIdentidad = @cedulaEmpleado and FechaEntrada >= @fechaInicioSemana and FechaEntrada < @fechaFinSemana +1
 
 
 	END TRY

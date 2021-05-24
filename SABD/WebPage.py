@@ -336,9 +336,10 @@ def ocultar_empleado(empleado,origen):
 @app.route("/listar_semana_planilla/")
 def listar_semana_planilla():
     if verificar_sesion() and not has_permisos():
+        datos = Logic.get_planilla_semana(session["user_id"])
         return render_template("listar_semana.html",
-                                planillas=Logic.get_planilla_semana(session["user_id"]) ,
-                                detalles_salario=[[["Lunes","papa","papa","papa","papa","papa","papa"],["Martes","papa","papa","papa","papa","papa","papa"]],[["Lunes","chayote","chayote","chayote","chayote","chayote","papa"],["Miercoles","chayote","chayote","chayote","chayote","chayote","papa"]]],
+                                planillas=datos[0] ,
+                                detalles_salario=datos[1],
                                 deducciones=[[["Caja","15","3200"],["Salud","46","35000"]],[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
         flash("No hay nada que ver aquí", "info")
@@ -348,7 +349,9 @@ def listar_semana_planilla():
 @app.route("/listar_anno_planilla/")
 def listar_anno_planilla():
     if verificar_sesion() and not has_permisos():
-        return render_template("listar_anno.html", planillas=[(0,"hola","hola","hola","fin")], deducciones=[[["Cajita","24","1500"],["Seguro","46","9855"]]])
+        datos = Logic.get_planilla_mes(session["user_id"])
+        return render_template("listar_anno.html", planillas=datos,
+                                                    deducciones=[[["Cajita","24","1500"],["Seguro","46","9855"]]])
     else:
         flash("No hay nada que ver aquí", "info")
         return redirect(url_for("login")) 
@@ -357,7 +360,7 @@ def listar_anno_planilla():
 # ---------------------------------------------- #
 
 
-
+ 
 
 @app.route("/test/<name>", methods=['GET', 'POST'])
 def test(name):

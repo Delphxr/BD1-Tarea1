@@ -370,7 +370,41 @@ def get_planillas_semana(Id):
         """,(Id)
     )
     planillas = tuple(cursor)
-    print(planillas)
+    cursor.close()
+    return (planillas)
+
+
+def get_marcas_semana(id_empleado,id_semana):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+
+        EXEC dbo.GetMarcasSemana
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,(id_empleado,id_semana)
+    )
+    marcas = tuple(cursor)
+    cursor.close()
+    return (marcas)
+
+
+def get_planillas_mes(Id):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetPlanillaMes 
+            ?,
+            @OutResultCode OUTPUT
+        """,(Id)
+    )
+    planillas = tuple(cursor)
     cursor.close()
     return (planillas)
 

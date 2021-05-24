@@ -1,4 +1,5 @@
 import DataBaseEmpleados
+from datetime import datetime
 
 
 
@@ -150,12 +151,72 @@ def get_administradores():
     return administradores
 
 def get_planilla_semana(id):
-    #Salario Bruto	Deducciones  	Salario Neto	Horas Ordinarias	Horas Extra Normales	Horas Extra Dobles
-    #[ID],[SalarioBruto],[TotalDeducciones],[SalarioNeto],[IdEmpleado],[IdSemana],[IdMovimientoPlanilla],[IdPlanillaXMesXEmpleado]
+    dias_semana = ["Viernes","Sabado","Domingo","Lunes","Martes","Miercoles","Jueves"]
     planillas = DataBaseEmpleados.get_planillas_semana(id)
-    for planilla in planillas:
-        planilla = [planilla[1],planilla[2],planilla[3],10,11,12]
+    marcas_dias = []
+
+    planillas = list(planillas)
+
+    counter2 = 0
+
+    while counter2 < len(planillas):
+        horas_normales_semana = 0
+        horas_extra_norm_semana = 0
+
+
+        marcas_semana = DataBaseEmpleados.get_marcas_semana(id,planillas[counter2][5])
+        
+        counter = 0
+        marca_temp = []
+        for marca in marcas_semana:
+
+            
+            hora_entrada = marca[1]
+            hora_salida = marca[2]
+            horas = hora_salida - hora_entrada
+        
+            horas = horas.seconds//3600 #redondeamos las horas
+            horas_extra_normales = 0
+            horas_extra_dobles = 0
+
+            if (horas > 8):
+                horas_extra_normales = horas-8
+                horas = 8
+            
+            marca_temp += [[dias_semana[counter],hora_entrada.strftime("%I:%M:%S %p"),hora_salida.strftime("%I:%M:%S %p"),horas,horas_extra_normales,0,0]]
+
+            horas_normales_semana += horas
+            horas_extra_norm_semana += horas_extra_normales
+            counter += 1
+        
+        marcas_dias += [marca_temp]
+        
+        planillas[counter2] = list(planillas[counter2])
+        planillas[counter2] = [counter2,planillas[counter2][1],planillas[counter2][2],planillas[counter2][3],horas_normales_semana,horas_extra_norm_semana,0]
+ 
+        counter2 +=1
+  
+    return [planillas,marcas_dias]
+    
+
+
+def get_planilla_mes(id):
+    #Mes	Salario Bruto	Deducciones	 Salario Neto
+    #[ID][SalarioNeto][SalarioBruto][TotalDeducciones][IdEmpleado][idMes]
+    planillas = DataBaseEmpleados.get_planillas_mes(id)
+    planillas = list(planillas)
+
+    counter2 = 0
+
+    while counter2 < len(planillas):
+
+        planillas[counter2] = list(planillas[counter2])
+        planillas[counter2] = [counter2, planillas[counter2][5], planillas[counter2][2], planillas[counter2][3], planillas[counter2][1]]
+ 
+        counter2 +=1
+    
     return planillas
+  
 
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()

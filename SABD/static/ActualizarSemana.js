@@ -40,6 +40,7 @@ function getHTMLTablaDeduccion(data){
 //al presionar en unn boton de salario obtenemoos datos y los actualizamos en la pagina
 $('.boton_salario').bind('click', function(e) {
     var data = ($(this).attr('data-button'));
+
     data = data.replace(/'/g, '"');
     data = JSON.parse(data);
 
@@ -50,7 +51,10 @@ $('.boton_salario').bind('click', function(e) {
 
 //al presionar en unn boton de deduccion obtenemoos datos y los actualizamos en la pagina
 $('.boton_deduccion').bind('click', function(e) {
+
     var data = ($(this).attr('data-button'));
+    
+
     data = data.replace(/'/g, '"');
     data = JSON.parse(data);
 
