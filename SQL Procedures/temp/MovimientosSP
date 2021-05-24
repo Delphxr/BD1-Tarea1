@@ -62,7 +62,10 @@ AS
 
 		IF not EXISTS (SELECT P.IdEmpleado FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla M ON P.IdEmpleado = M.IdEmpleado and M.ID = @cntx) or (SELECT TOP 1 FechaInicio FROM dbo.SemanaPlanilla ORDER BY FechaInicio DESC) = @Fecha_Actual
 			begin
-				
+
+					
+
+
 					INSERT INTO dbo.PlanillaXSemanaXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,IdSemana,IdMovimientoPlanilla,IdPlanillaXMesXEmpleado)
 					SELECT MP.Monto,MP.Monto,0,MP.IdEmpleado,S.ID,MP.ID,PM.ID FROM dbo.MovimientoPlanilla MP 
 					inner join dbo.SemanaPlanilla S ON MP.ID = @cntx and MP.Fecha BETWEEN S.FechaInicio and S.FechaFin and MP.Fecha = @Fecha_Actual
