@@ -512,12 +512,18 @@ BEGIN
 	
 	IF (@Fecha_Actual = @Fin_Semana)
 		begin
+			
+
 			INSERT INTO dbo.SemanaPlanilla(FechaInicio,Fechafin,IdMes)
 			SELECT DATEADD(DAY,1,@Fin_Semana),DATEADD(WEEK,1,@Fin_Semana),ID FROM dbo.MesPlanilla WHERE DATEADD(DAY,1,@Fin_Semana) BETWEEN MesPlanilla.FechaInicio and MesPlanilla.FechaFin
-			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
 			EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
+
+			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
+			
+
 		end
 	EXEC dbo.SPMOVIMIENTOS @Fecha_Actual
+	--EXEC dbo.SPMOVIMIENTOS3 @Fecha_Actual
 	EXEC dbo.SPMOVIMIENTOS2 @Fecha_Actual
 	--SELECT * FROM dbo.MovimientoPlanilla
 	
