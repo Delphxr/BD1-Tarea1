@@ -428,6 +428,23 @@ def get_feriados():
     cursor.close()
     return (feriados)
 
+def get_deducciones_mes(id_empleado,id_mes):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetDeduccionesMes 
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,(id_empleado,id_mes)
+    )
+    deducciones = list(cursor)
+    cursor.close()
+    return (deducciones)
+
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

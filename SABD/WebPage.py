@@ -356,8 +356,8 @@ def listar_semana_planilla():
 def listar_anno_planilla():
     if verificar_sesion() and not has_permisos():
         datos = Logic.get_planilla_mes(session["user_id"])
-        return render_template("listar_anno.html", planillas=datos,
-                                                    deducciones=[[["Cajita","24","1500"],["Seguro","46","9855"]]])
+        return render_template("listar_anno.html", planillas=datos[0],
+                                                    deducciones=datos[1])
     else:
         flash("No hay nada que ver aquí", "info")
         return redirect(url_for("login")) 

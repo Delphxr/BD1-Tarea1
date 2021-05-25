@@ -207,7 +207,7 @@ def get_planilla_semana(id):
         marcas_dias += [marca_temp]
         
         planillas[counter2] = list(planillas[counter2])
-        planillas[counter2] = [counter2,float(planillas[counter2][1]),planillas[counter2][2],float(planillas[counter2][3]),horas_normales_semana,horas_extra_norm_semana,horas_extra_doble_semana]
+        planillas[counter2] = [counter2,float(planillas[counter2][1]),float(planillas[counter2][2]),float(planillas[counter2][3]),horas_normales_semana,horas_extra_norm_semana,horas_extra_doble_semana]
 
 
         counter2 +=1
@@ -221,17 +221,37 @@ def get_planilla_mes(id):
     #[ID][SalarioNeto][SalarioBruto][TotalDeducciones][IdEmpleado][idMes]
     planillas = DataBaseEmpleados.get_planillas_mes(id)
     planillas = list(planillas)
+    deducciones_mes = []
 
     counter2 = 0
 
     while counter2 < len(planillas):
+        deduc = list(DataBaseEmpleados.get_deducciones_mes(planillas[counter2][4],planillas[counter2][5]))
+        i = 0
+        while i < len(deduc):
+            deduc[i] = list(deduc[i])
+            deduc[i][0] = "Deduccion"
+            deduc[i][1] = float(deduc[i][1])
+            if deduc[i][1] >= 1:
+                deduc[i][2] = deduc[i][1]
+                deduc[i][1] = ""
+                
+            else:
+                if deduc[i][1] == 0.009:
+                    deduc[i][0] = "Obligatorio de Ley"
+                else:
+                    deduc[i][0] = "Ahorro Asociacion Solidarista"
+                deduc[i][2] = ""
 
+            i+=1
+
+        deducciones_mes += [deduc]
         planillas[counter2] = list(planillas[counter2])
         planillas[counter2] = [counter2, planillas[counter2][5], planillas[counter2][2], planillas[counter2][3], planillas[counter2][1]]
  
         counter2 +=1
     
-    return planillas
+    return [planillas,deducciones_mes]
   
 
 def clear_bd():

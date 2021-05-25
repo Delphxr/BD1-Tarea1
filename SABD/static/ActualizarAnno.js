@@ -25,6 +25,7 @@ function getHTMLTablaDeduccion(data){
 $('.boton_deduccion').bind('click', function(e) {
     var data = ($(this).attr('data-button'));
     data = data.replace(/'/g, '"');
+    console.log(data)
     data = JSON.parse(data);
 
     
