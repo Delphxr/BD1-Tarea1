@@ -1,6 +1,6 @@
 USE [PlanillaObrera_BD]
 GO
-/****** Object:  StoredProcedure [dbo].[SPMovimientoDeduccion]    Script Date: 24/05/2021 11:39:15 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[SPMovimientoDeduccion]    Script Date: 25/05/2021 02:10:29 a. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,26 +17,30 @@ AS
 	while @cntx <= @cntrendx
 	begin
 		
-		INSERT INTO [dbo].[MovimientoPlanilla]
-			   ([Fecha]
-			   ,[Monto]
-			   ,[IdTipoMov]
-			   ,[IdEmpleado]
-			   ,[Visible])
-		 VALUES
-			   (@Fecha_Actual
-			   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
-			   ,4
-			   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
-			   ,1)
+		if (SELECT TOP 1 Visible FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx) = 1
+		begin
+			INSERT INTO [dbo].[MovimientoPlanilla]
+				   ([Fecha]
+				   ,[Monto]
+				   ,[IdTipoMov]
+				   ,[IdEmpleado]
+				   ,[Visible])
+			 VALUES
+				   (@Fecha_Actual
+				   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+				   ,4
+				   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+				   ,1)
 
 		
-		INSERT INTO [dbo].[MovimientoDeduccion]
-           ([ID]
-           ,[IdTipoDeduccion])
-		 VALUES
-			   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
-			   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
+			INSERT INTO [dbo].[MovimientoDeduccion]
+			   ([ID]
+			   ,[IdTipoDeduccion])
+			 VALUES
+				   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
+				   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
+		end
+
 		
 
 		
