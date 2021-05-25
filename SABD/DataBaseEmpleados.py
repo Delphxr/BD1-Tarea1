@@ -445,6 +445,23 @@ def get_deducciones_mes(id_empleado,id_mes):
     cursor.close()
     return (deducciones)
 
+def get_deducciones_semana(id_empleado,id_semana):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetDeduccionesSemana 
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,(id_empleado,id_semana)
+    )
+    deducciones = list(cursor)
+    cursor.close()
+    return (deducciones)
+
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

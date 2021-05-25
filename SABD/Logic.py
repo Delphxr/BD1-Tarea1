@@ -158,6 +158,7 @@ def get_planilla_semana(id):
     for f in feriados:
         lista_feriados += [datetime.strptime(f[1], '%Y-%m-%d').date()]
     marcas_dias = []
+    deducciones_dias = []
 
     salarioxhora = float(get_puestos_by_id(get_empleados_by_id(id)[0][5])[0][2])
 
@@ -172,7 +173,26 @@ def get_planilla_semana(id):
 
 
         marcas_semana = DataBaseEmpleados.get_marcas_semana(id,planillas[counter2][5])
+        deduc = DataBaseEmpleados.get_deducciones_semana(id,planillas[counter2][5])
+
         
+
+        
+        i = 0
+        while i < len(deduc):
+            deduc[i] = list(deduc[i])
+            deduc[i][0] = deduc[i][3]
+            deduc[i][2] = float(deduc[i][2])
+            if deduc[i][2] >= 1:
+                deduc[i][3] = deduc[i][2]
+                deduc[i][1] = ""
+                
+            else:
+                deduc[i][1] = deduc[i][2]
+                deduc[i][2] = ""
+            i+=1
+
+
         counter = 0
         marca_temp = []
         for marca in marcas_semana: 
@@ -205,6 +225,7 @@ def get_planilla_semana(id):
             counter += 1
         
         marcas_dias += [marca_temp]
+        deducciones_dias += [deduc]
         
         planillas[counter2] = list(planillas[counter2])
         planillas[counter2] = [counter2,float(planillas[counter2][1]),float(planillas[counter2][2]),float(planillas[counter2][3]),horas_normales_semana,horas_extra_norm_semana,horas_extra_doble_semana]
@@ -212,7 +233,7 @@ def get_planilla_semana(id):
 
         counter2 +=1
   
-    return [planillas,marcas_dias]
+    return [planillas,marcas_dias,deducciones_dias]
     
 
 
@@ -230,17 +251,13 @@ def get_planilla_mes(id):
         i = 0
         while i < len(deduc):
             deduc[i] = list(deduc[i])
-            deduc[i][0] = "Deduccion"
+            deduc[i][0] = deduc[i][6]
             deduc[i][1] = float(deduc[i][1])
             if deduc[i][1] >= 1:
                 deduc[i][2] = deduc[i][1]
                 deduc[i][1] = ""
                 
             else:
-                if deduc[i][1] == 0.009:
-                    deduc[i][0] = "Obligatorio de Ley"
-                else:
-                    deduc[i][0] = "Ahorro Asociacion Solidarista"
                 deduc[i][2] = ""
 
             i+=1

@@ -1,4 +1,11 @@
-CREATE PROCEDURE dbo.GetDeduccionesMes
+USE [PlanillaObrera_BD]
+GO
+/****** Object:  StoredProcedure [dbo].[GetDeduccionesMes]    Script Date: 25/05/2021 01:52:16 a. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetDeduccionesMes]
 	@inEmpleadoId INT
 	,@inMesId INT
 	-- parametros de salida
@@ -28,7 +35,8 @@ BEGIN
 			  ,[IdMovimiento]
 			  ,[IdEmpleado]
 			  ,[IdMes]
-		  FROM [dbo].[DeduccionesXMesXEmpleado] WHERE IdEmpleado=@inEmpleadoId and IdMes=@inMesId
+			  ,(Select top 1 nombre from dbo.TipoDeduccion t where t.id = (select top 1 idtipodeduccion from dbo.MovimientoDeduccion w where w.id = p.IdMovimiento))
+		  FROM [dbo].[DeduccionesXMesXEmpleado] p WHERE IdEmpleado=@inEmpleadoId and IdMes=@inMesId
 	END TRY
 	BEGIN CATCH
 		Set @OutResultCode=50005;

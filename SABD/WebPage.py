@@ -346,7 +346,7 @@ def listar_semana_planilla():
         return render_template("listar_semana.html",
                                 planillas=datos[0] ,
                                 detalles_salario=datos[1],
-                                deducciones=[[["Caja","15","3200"],["Salud","46","35000"]],[["Cajita","24","1500"],["Seguro","46","9855"]]])
+                                deducciones=datos[2])
     else:
         flash("No hay nada que ver aquí", "info")
         return redirect(url_for("login")) 
