@@ -330,19 +330,20 @@ def get_administradores_BD():
     return (administradores)
 
 # -------------------------------------------- #
-
+import time
 def cargar_xml_BD(ruta):
     cursor = conn.cursor()
     cursor.execute(
         """
- 
         EXEC dbo.CargarXML
             ?
         """,
         (ruta)
     )
+
     conn.commit()
     cursor.close()
+    time.sleep(120)
  
 def limpiar_tablas():
     cursor = conn.cursor()
@@ -350,12 +351,15 @@ def limpiar_tablas():
         """
         DECLARE
             @OutResultCode INT
+        
         EXEC dbo.ReiniciarBD
             @OutResultCode OUTPUT
         """
     )
+    
     conn.commit()
     cursor.close()
+    
 
 def get_planillas_semana(Id):
     cursor = conn.cursor()

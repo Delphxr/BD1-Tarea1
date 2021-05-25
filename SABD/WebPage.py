@@ -19,6 +19,8 @@ app.secret_key = "c8gd6qlgK4N2*XtLeHa2ykCj!fQrR(a@R)t4TaLee43c$F9&)2w6"
 app.config['UPLOAD_EXTENSIONS'] = ['.xml']
 app.config['UPLOAD_PATH'] = 'uploads'
 
+
+
 # ---------------------------------------------- #
 
 #verificamos si hay una sesión iniciada, retornamos true o false
@@ -106,22 +108,26 @@ def ajustes():
                     flash("Archivo no valido", "error")
                     redirect(url_for("ajustes")) 
                 
+                APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+                UPLOAD_FOLDER = os.path.join(APP_ROOT, 'uploads')
+                app.config['UPLOAD_PATH'] = UPLOAD_FOLDER
                 p = os.path.join(app.config['UPLOAD_PATH'], filename)
-                num = 2
-                #verificamos que no haya un archivo con el mismo nombre, si no lo modificamos
+                num = 2              
+
+
                 while os.path.exists(p):
                     newfilename = str(num) + filename
                     p = os.path.join(app.config['UPLOAD_PATH'], newfilename)
                     num += 1
                 uploaded_file.save(p) #guardamos el archivo
                 
-                #obtenemos la ruta del archivo en el directorio
-                ruta_del_archivo = os.path.dirname(os.path.realpath(__file__)) + "\\" + p
+                #obtenemos la ruta del archivo en el d irectorio
+                ruta_del_archivo = p
                 ruta_del_archivo = str(ruta_del_archivo)
-                #print(ruta_del_archivo)
+
                 Logic.cargar_xml(ruta_del_archivo)
                 flash("Se ha cargado correctamente el archivo", "info")
-    
+     
     if verificar_sesion() and has_permisos():
         return render_template("ajustes.html")
     else:
