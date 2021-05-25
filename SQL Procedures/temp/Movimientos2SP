@@ -1,7 +1,12 @@
-DROP PROCEDURE SPMOVIMIENTOS2
+USE [PlanillaObrera_BD]
+GO
+/****** Object:  StoredProcedure [dbo].[SPMOVIMIENTOS2]    Script Date: 25/05/2021 01:36:43 a. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE SPMOVIMIENTOS2  @Fecha_Actual date
+ALTER PROCEDURE [dbo].[SPMOVIMIENTOS2]  @Fecha_Actual date
 AS
 	declare @cntx int = 1
 	declare @cntrendx int
@@ -20,4 +25,3 @@ AS
 	set @cntx = @cntx +1
 	end
 
-GO

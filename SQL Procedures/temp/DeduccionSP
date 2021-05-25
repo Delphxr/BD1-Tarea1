@@ -1,7 +1,12 @@
-DROP PROCEDURE SPMovimientoDeduccion
+USE [PlanillaObrera_BD]
+GO
+/****** Object:  StoredProcedure [dbo].[SPMovimientoDeduccion]    Script Date: 24/05/2021 11:39:15 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE SPMovimientoDeduccion @Fecha_Actual date
+ALTER PROCEDURE [dbo].[SPMovimientoDeduccion] @Fecha_Actual date
 AS
 	declare @cntx int = 1
 	declare @cntrendx int
@@ -11,22 +16,30 @@ AS
 	select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
 	while @cntx <= @cntrendx
 	begin
-		IF (SELECT T.Porcentual FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D ON D.ID = @cntx and T.ID = D.IdTipoDeduccion ) = 1
-			begin
-				SET @monto = (SELECT Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)*(SELECT Valor FROM dbo.TipoDeduccion T inner join dbo.DeduccionesXEmpleado D on D.ID = @cntx and D.IdTipoDeduccion = T.ID)
-				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado)
-				SELECT @Fecha_Actual,@monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int),IdEmpleado
-				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx and Visible = 1
-			end
-		ELSE
-			begin
-				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
-				SELECT @Fecha_Actual,Monto,CAST(CASE IdTipoDeduccion WHEN 1 THEN 4 ELSE 5 END AS int),IdEmpleado,1 
-				FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx and Visible = 1
-			end
+		
+		INSERT INTO [dbo].[MovimientoPlanilla]
+			   ([Fecha]
+			   ,[Monto]
+			   ,[IdTipoMov]
+			   ,[IdEmpleado]
+			   ,[Visible])
+		 VALUES
+			   (@Fecha_Actual
+			   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+			   ,4
+			   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+			   ,1)
+
+		
+		INSERT INTO [dbo].[MovimientoDeduccion]
+           ([ID]
+           ,[IdTipoDeduccion])
+		 VALUES
+			   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
+			   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
 		
 
-	set @cntx = @cntx +1
-	end
+		
 
-GO
+		set @cntx = @cntx +1
+	end
