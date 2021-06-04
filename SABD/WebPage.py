@@ -368,9 +368,9 @@ def listar_anno_planilla():
 
  
 
-@app.route("/test/<name>", methods=['GET', 'POST'])
-def test(name):
-    return f"Se ha recibido: {name}"
+@app.route("/test/")
+def test():
+    return render_template("test.html")
 
 @app.route("/")
 def inicio():
