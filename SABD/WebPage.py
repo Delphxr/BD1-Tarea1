@@ -58,6 +58,7 @@ def login():
                 #obtenemos el nombre del usuario y su id:
                 datos_usuario = Logic.get_empleados_by_User(usuario[3])
                 session["name"] = datos_usuario[1]
+                session["puesto"] = datos_usuario[2]
                 session["user_id"] = datos_usuario[0]
 
                 return redirect(url_for("home"))
@@ -368,9 +369,12 @@ def listar_anno_planilla():
 
  
 
-@app.route("/test/")
+@app.route("/test/", methods=["POST", "GET"])
 def test():
-    return render_template("test.html")
+    return render_template("test.html", 
+                            deducciones=Logic.get_deducciones_empleado(session["user_id"]),
+                            name=session["name"],
+                            puesto=session["puesto"])
 
 @app.route("/")
 def inicio():

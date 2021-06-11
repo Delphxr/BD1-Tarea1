@@ -271,6 +271,18 @@ def get_planilla_mes(id):
     return [planillas,deducciones_mes]
   
 
+def get_deducciones_empleado(id):
+    """[devolvemos las deducciones del empleado]
+
+    Args:
+        id ([int]): [id del empleado]
+
+    Returns:
+        [list]: [lista con las deducciones]
+    """    
+    deducciones = DataBaseEmpleados.get_deducciones_empleado(id)
+    return deducciones
+
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()
 
