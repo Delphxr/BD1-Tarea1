@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 #encargado de comunicar entre el front end y la BD
 import Logic
 
-
+ 
 
 app = Flask(__name__)  # creamos la pagina
 # key para tener los datos de inicio de secion encriptados
@@ -18,7 +18,7 @@ app.secret_key = "c8gd6qlgK4N2*XtLeHa2ykCj!fQrR(a@R)t4TaLee43c$F9&)2w6"
 #solo recibimos archivos xml
 app.config['UPLOAD_EXTENSIONS'] = ['.xml']
 app.config['UPLOAD_PATH'] = 'uploads'
-
+  
 
 
 # ---------------------------------------------- #
@@ -320,7 +320,7 @@ def editar_empleados_esp(empleado):
             departamentos=Logic.get_departamentos(),
             puestos=Logic.get_puestos()
             )
-
+ 
         else:
             flash("No tiene los permisos para realizar esta acción", "info")
             return redirect(url_for("login")) 
@@ -369,12 +369,40 @@ def listar_anno_planilla():
 
  
 
-@app.route("/test/", methods=["POST", "GET"])
-def test():
-    return render_template("test.html", 
-                            deducciones=Logic.get_deducciones_empleado(session["user_id"]),
-                            name=session["name"],
-                            puesto=session["puesto"])
+@app.route("/test/<user_id>", methods=["POST", "GET"])
+def test(user_id=None):
+
+
+    if user_id == None:
+        return redirect(url_for("home"))
+    else:
+
+        if request.method == "POST":
+            tipo = request.form["btn"]
+            if tipo == "new":
+                tipo = request.form["tipodi"]
+                monto = request.form["SalarioXHora"]
+                Logic.asociar_deduccion(user_id,tipo,monto)
+
+            elif tipo=="delete":
+                Logic.desasociar_deduccion(request.form["id"])
+
+            elif tipo == "edit":
+                monto = request.form["SalarioXHora"]
+                id_deduccion = request.form["id"]
+                Logic.editar_deduccion(id_deduccion,monto)
+            return redirect(url_for("test",user_id=user_id))
+
+        datos_usuario = Logic.get_empleados_by_id(user_id)[0]
+        name = datos_usuario[1] 
+        puesto = datos_usuario[8]  
+
+
+        return render_template("test.html", 
+                            tipos_deduccion=Logic.get_tipos_deduccion(),
+                            deducciones=Logic.get_deducciones_empleado(user_id),
+                            name=name,
+                            puesto=puesto)
 
 @app.route("/")
 def inicio():

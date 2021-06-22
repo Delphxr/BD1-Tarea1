@@ -34,7 +34,7 @@ def get_empleados_by_id(Id):
 def get_empleados_by_User(Id):
     empleado = DataBaseEmpleados.get_empleados_by_User(Id)
     if empleado == ():
-        empleado = (0,"Administrador")
+        empleado = [0,"Administrador","Administrador"]
     else:
         empleado = empleado[0]
 
@@ -129,7 +129,7 @@ def get_tipos_di():
 
     Returns:
         [tuple]: [tuplo con los tipos de di]
-    """    
+    """  
     tipos_di = DataBaseEmpleados.get_tipos_di_BD()
     return tipos_di
 
@@ -282,6 +282,34 @@ def get_deducciones_empleado(id):
     """    
     deducciones = DataBaseEmpleados.get_deducciones_empleado(id)
     return deducciones
+
+
+
+def get_tipos_deduccion():
+    """[devolvemos los tipos de decuccciones]
+
+    Returns:
+        [list]: [lista con las deducciones]
+    """    
+    deducciones = DataBaseEmpleados.get_tipos_deduccion()
+    i = 0
+    while i < len(deducciones):
+        deducciones[i] = list(deducciones[i])
+        deducciones[i][2] = int(deducciones[i][2])
+        deducciones[i][3] = int(deducciones[i][3])
+        deducciones[i][4] = float(deducciones[i][4])
+        i +=1
+
+    return deducciones
+
+def asociar_deduccion(id,tipo,monto):
+    DataBaseEmpleados.asociar_deduccion(id,tipo,monto)
+
+def desasociar_deduccion(id):
+    DataBaseEmpleados.desasociar_deduccion(id)
+
+def editar_deduccion(id,monto):
+    DataBaseEmpleados.editar_deduccion(id,monto)
 
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()

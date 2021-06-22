@@ -478,6 +478,73 @@ def get_deducciones_empleado(id_empleado):
     cursor.close()
     return (deducciones)
 
+def get_tipos_deduccion():
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetTiposDeduccion
+            @OutResultCode OUTPUT
+        """
+    )
+    deducciones = list(cursor)
+    cursor.close()
+    return (deducciones)
+
+def asociar_deduccion(id,tipo,monto):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.AsociarDeduccionEmpleado
+            ?,
+            ?,
+            ?,
+            @OutResultCode OUTPUT
+        """,
+        (id,tipo,monto)
+    )
+    conn.commit()
+    cursor.close()
+
+def desasociar_deduccion(id):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.DesasociarDeduccion
+            ?,
+
+            @OutResultCode OUTPUT
+        """,
+        (id)
+    )
+    conn.commit()
+    cursor.close()
+
+def editar_deduccion(id,monto):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.EditarDeduccionEmpleado
+            ?,
+            ?,
+
+            @OutResultCode OUTPUT
+        """,
+        (id,monto)
+    )
+    conn.commit()
+    cursor.close()
 
 # -------------------------------------------- #
 
