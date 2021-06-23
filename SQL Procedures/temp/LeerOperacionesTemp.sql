@@ -1,9 +1,7 @@
-
-SET NOCOUNT ON
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -495,12 +493,13 @@ BEGIN
 		end
 
 		-- cargamosmarca de asistencia en caso de que haya
+	begin transaction Marca
 	set @subxml = (select TOP 1 MarcaDeAsistencia FROM @TablaOperaciones WHERE id = @CursorTestID)
 	if @subxml is not null
 		begin
 			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-
-			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
+			
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
 			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3)
 				WITH (
 					FechaEntrada datetime,
@@ -510,7 +509,7 @@ BEGIN
 
 			EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
 
-
+			
 			--set @cntx = 1;
 			--select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;
 			--while @cntx <= @cntrendx
@@ -553,9 +552,10 @@ BEGIN
 
 			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
 			
-
+			UPDATE dbo.MovimientoPlanilla
+			SET Visible = 0
 		end
-		
+	commit transaction Marca
 	--EXEC dbo.SPMOVIMIENTOS3 @Fecha_Actual
 	--EXEC dbo.SPMOVIMIENTOS2 @Fecha_Actual
 	--SELECT * FROM dbo.MovimientoPlanilla
@@ -565,4 +565,3 @@ BEGIN
 	SET @CursorTestID = @CursorTestID + 1 
 end
 EXEC dbo.SETNETO
-
