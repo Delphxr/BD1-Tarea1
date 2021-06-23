@@ -67,7 +67,41 @@ AS
 			inner join dbo.Empleado E ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and E.ID = MP.IdEmpleado and CONVERT(DATE,MA.FechaSalida) = MP.Fecha and CONVERT(DATE,MA.FechaSalida) = @Fecha_Actual
 			SET IDENTITY_INSERT dbo.MovimientoHoras OFF
 
+			IF (@Fecha_Actual = @Fin_Semana)
+			begin
+			set @cntx = 1;
+			select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
+			while @cntx <= @cntrendx
+				begin
+		
+				if (SELECT TOP 1 Visible FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx) = 1
+				begin
+					INSERT INTO [dbo].[MovimientoPlanilla]
+						   ([Fecha]
+						   ,[Monto]
+						   ,[IdTipoMov]
+						   ,[IdEmpleado]
+						   ,[Visible])
+					 VALUES
+						   (@Fecha_Actual
+						   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+						   ,4
+						   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+						   ,1)
 
+					SET IDENTITY_INSERT dbo.MovimientoDeduccion ON
+					INSERT INTO [dbo].[MovimientoDeduccion]
+					   ([ID]
+					   ,[IdTipoDeduccion])
+					 VALUES
+						   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
+						   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
+					SET IDENTITY_INSERT dbo.MovimientoDeduccion OFF
+				end
+
+				set @cntx = @cntx +1
+				end
+			end
 
 	set @cntx = 1;
 	select @cntrendx = COUNT(0) from dbo.MovimientoPlanilla;
@@ -172,39 +206,7 @@ AS
 		
 		
 		set @cntx = @cntx +1
-		IF (@Fecha_Actual = @Fin_Semana)
-			begin
-			set @cntx = 1;
-			select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
-			while @cntx <= @cntrendx
-				begin
 		
-				if (SELECT TOP 1 Visible FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx) = 1
-				begin
-					INSERT INTO [dbo].[MovimientoPlanilla]
-						   ([Fecha]
-						   ,[Monto]
-						   ,[IdTipoMov]
-						   ,[IdEmpleado]
-						   ,[Visible])
-					 VALUES
-						   (@Fecha_Actual
-						   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
-						   ,4
-						   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
-						   ,1)
-
-					SET IDENTITY_INSERT dbo.MovimientoDeduccion ON
-					INSERT INTO [dbo].[MovimientoDeduccion]
-					   ([ID]
-					   ,[IdTipoDeduccion])
-					 VALUES
-						   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
-						   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
-					SET IDENTITY_INSERT dbo.MovimientoDeduccion OFF
-				end
-
-				set @cntx = @cntx +1
-				end
-			end
 	end
+
+
