@@ -546,6 +546,27 @@ def editar_deduccion(id,monto):
     conn.commit()
     cursor.close()
 
+
+def get_historial_empleado(id_empleado):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DECLARE
+            @OutResultCode INT
+        
+        EXEC dbo.GetHistorialEmpleado 
+            ?,
+            @OutResultCode OUTPUT
+        """,(id_empleado)
+    )
+    historial = []
+    try:
+        historial = list(cursor)
+    except:
+        historial = []
+    
+    cursor.close()
+    return (historial)
 # -------------------------------------------- #
 
 #hacemos una coneccion on la base de datos

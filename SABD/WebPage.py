@@ -86,8 +86,9 @@ def logout():
 #pagina principal
 @app.route("/home/")
 def home():
-    if verificar_sesion(): 
-        return render_template("homepage.html", permiso=session["permiso"], nombre=session["name"])
+    if verificar_sesion():
+        historial = Logic.get_historial_empleado(session["user_id"]) 
+        return render_template("homepage.html", permiso=session["permiso"], nombre=session["name"], historial=historial)
     else:
         return redirect(url_for("login")) 
 
@@ -136,7 +137,7 @@ def ajustes():
         return redirect(url_for("login")) 
 # ---------------------------------------------- #
 
-#pagina de listar puestos
+#pagina de listar
 @app.route("/listar_puestos/")
 def listar_puestos():
     if verificar_sesion():
@@ -366,43 +367,56 @@ def listar_anno_planilla():
 
 # ---------------------------------------------- #
 
+@app.route("/advanced_info/<user_id>", methods=["POST", "GET"])
+def advanced_info(user_id=None):
 
- 
+    if verificar_sesion():
+        if user_id == None:
+            return redirect(url_for("home")) 
+        else:
 
-@app.route("/test/<user_id>", methods=["POST", "GET"])
-def test(user_id=None):
+            if request.method == "POST" and has_permisos():
+                tipo = request.form["btn"]
+                if tipo == "new":
+                    tipo = request.form["tipodi"]
+                    monto = request.form["SalarioXHora"]
+                    Logic.asociar_deduccion(user_id,tipo,monto)
+
+                elif tipo=="delete":
+                    Logic.desasociar_deduccion(request.form["id"])
+
+                elif tipo == "edit":
+                    monto = request.form["SalarioXHora"]
+                    id_deduccion = request.form["id"]
+                    Logic.editar_deduccion(id_deduccion,monto)
+                return redirect(url_for("advanced_info",user_id=user_id))
+
+            elif request.method == "POST" and not has_permisos():
+                flash("No tiene los permisos para hacer eso", "info")
+            datos_usuario = Logic.get_empleados_by_id(user_id)[0]
+            name = datos_usuario[1] 
+            puesto = datos_usuario[8] 
+            historial = Logic.get_historial_empleado(user_id) 
 
 
-    if user_id == None:
-        return redirect(url_for("home"))
+            return render_template("InformacionAvanzada.html", 
+                                tipos_deduccion=Logic.get_tipos_deduccion(),
+                                deducciones=Logic.get_deducciones_empleado(user_id),
+                                name=name,
+                                puesto=puesto,
+                                historial=historial)
     else:
-
-        if request.method == "POST":
-            tipo = request.form["btn"]
-            if tipo == "new":
-                tipo = request.form["tipodi"]
-                monto = request.form["SalarioXHora"]
-                Logic.asociar_deduccion(user_id,tipo,monto)
-
-            elif tipo=="delete":
-                Logic.desasociar_deduccion(request.form["id"])
-
-            elif tipo == "edit":
-                monto = request.form["SalarioXHora"]
-                id_deduccion = request.form["id"]
-                Logic.editar_deduccion(id_deduccion,monto)
-            return redirect(url_for("test",user_id=user_id))
-
-        datos_usuario = Logic.get_empleados_by_id(user_id)[0]
-        name = datos_usuario[1] 
-        puesto = datos_usuario[8]  
+        return redirect(url_for("login"))
 
 
-        return render_template("test.html", 
-                            tipos_deduccion=Logic.get_tipos_deduccion(),
-                            deducciones=Logic.get_deducciones_empleado(user_id),
-                            name=name,
-                            puesto=puesto)
+@app.route("/to_advanced/")
+def to_advanced():
+    if verificar_sesion() and not has_permisos():
+        user_id = session["user_id"]
+        return redirect(url_for("advanced_info",user_id=user_id))
+    else:
+        flash("No hay nada que ver aquí", "info")
+        return redirect(url_for("login")) 
 
 @app.route("/")
 def inicio():

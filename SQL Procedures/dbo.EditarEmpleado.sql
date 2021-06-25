@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[EditarEmpleado]
+ALTER PROCEDURE [dbo].[EditarEmpleado]
 	-- parametros de entrada
 	  @inEmpleadoID INT
 	, @inNombre VARCHAR(100)
@@ -47,17 +47,97 @@ BEGIN
 			RETURN
 		END;
 		
-		UPDATE [dbo].[Empleado]
-			SET [Nombre] = @inNombre
-			  ,[IdTipoIdentificacion] = @inTipoIdentidicacionId
-			  ,[ValorDocumentoIdentidad] = @inValorDocumentoIdentificacion
-			  ,[IdDepartamento] = @inDepartamentoId
-			  ,[IdPuesto] = @inPuestoId
-			  ,[FechaNacimiento] = @inFechaNacimiento
-			WHERE ID=@inEmpleadoID
+		
+		BEGIN TRANSACTION Cambios
+			--guardamos los datos en el historial
+			declare @output int
+			declare @old sql_variant = (select top 1 Nombre from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inNombre)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'Nombre'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inNombre
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			set @old = (select top 1 ValorDocumentoIdentidad from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inValorDocumentoIdentificacion)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'ValorDI'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inValorDocumentoIdentificacion
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			set @old = (select top 1 IdTipoIdentificacion from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inTipoIdentidicacionId)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'TipoDI'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inTipoIdentidicacionId
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			set @old = (select top 1 IdDepartamento from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inDepartamentoId)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'Departamento'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inDepartamentoId
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			set @old = (select top 1 IdPuesto from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inPuestoId)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'Puesto'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inPuestoId
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			set @old = (select top 1 FechaNacimiento from dbo.Empleado WHERE ID=@inEmpleadoID)
+			if (@old != @inFechaNacimiento)
+			begin
+				exec dbo.NuevoHistorial 
+				  @inIdEmpleado = @inEmpleadoID
+				, @inValorModificado = 'FechaNacimiento'
+				, @inValorAnterior = @old
+				, @inValorNuevo = @inFechaNacimiento
+				-- parametros de salida
+				, @OutResultCode = @output OUTPUT
+			end;
+
+			UPDATE [dbo].[Empleado]
+				SET [Nombre] = @inNombre
+				  ,[IdTipoIdentificacion] = @inTipoIdentidicacionId
+				  ,[ValorDocumentoIdentidad] = @inValorDocumentoIdentificacion
+				  ,[IdDepartamento] = @inDepartamentoId
+				  ,[IdPuesto] = @inPuestoId
+				  ,[FechaNacimiento] = @inFechaNacimiento
+				WHERE ID=@inEmpleadoID
+		COMMIT TRANSACTION Cambios;
 
 	END TRY
 	BEGIN CATCH
+		IF @@Trancount>0 
+				ROLLBACK TRANSACTION Cambios; -- garantiza el nada, pues si hubo error 
+				-- quiero que la BD quede como si nada hubiera pasado
 		Set @OutResultCode=50005;
 
 	END CATCH;

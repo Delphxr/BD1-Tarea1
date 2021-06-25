@@ -311,6 +311,10 @@ def desasociar_deduccion(id):
 def editar_deduccion(id,monto):
     DataBaseEmpleados.editar_deduccion(id,monto)
 
+def get_historial_empleado(id):
+    historial = DataBaseEmpleados.get_historial_empleado(id)
+    return historial
+
 def clear_bd():
     DataBaseEmpleados.limpiar_tablas()
 
