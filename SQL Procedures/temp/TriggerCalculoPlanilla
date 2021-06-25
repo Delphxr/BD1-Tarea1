@@ -1,0 +1,98 @@
+ALTER TRIGGER dbo.trgCalculoPlanilla
+ON dbo.MovimientoPlanilla
+AFTER INSERT
+AS
+
+DECLARE @Mov INT = (SELECT IdTipoMov FROM inserted)
+DECLARE @FechaMov date = (SELECT Fecha FROM inserted)
+DECLARE @Inicio_Mes date = (SELECT TOP 1 FechaInicio FROM dbo.MesPlanilla ORDER BY FechaInicio DESC)
+DECLARE @Inicio_Semana date = (SELECT TOP 1 FechaInicio FROM dbo.SemanaPlanilla ORDER BY FechaInicio DESC)
+DECLARE @IDMesActual int =(SELECT ID FROM dbo.MesPlanilla WHERE @FechaMov between FechaInicio and FechaFin)
+DECLARE @IDSemanaActual int =(SELECT ID FROM dbo.SemanaPlanilla WHERE @FechaMov between FechaInicio and FechaFin)
+
+IF(@Mov = 1 or @Mov = 2 or @Mov = 3)
+begin
+
+	IF (not EXISTS(SELECT P.IdEmpleado FROM dbo.PlanillaXMesXEmpleado P inner join inserted I ON I.IdEmpleado = P.IdEmpleado and P.idMes = @IDMesActual) and  @Inicio_Mes = @FechaMov)
+	begin
+		INSERT INTO dbo.PlanillaXMesXEmpleado(IdEmpleado,idMes,SalarioBruto,SalarioNeto,TotalDeducciones)
+		SELECT I.IdEmpleado,M.ID,I.Monto,I.Monto,0 FROM inserted I inner join dbo.MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin
+	end
+	
+	ELSE IF (not EXISTS(SELECT P.IdEmpleado FROM dbo.PlanillaXMesXEmpleado P inner join inserted I ON I.IdEmpleado = P.IdEmpleado))
+	begin
+		INSERT INTO dbo.PlanillaXMesXEmpleado(IdEmpleado,idMes,SalarioBruto,SalarioNeto,TotalDeducciones)
+		SELECT I.IdEmpleado,M.ID,I.Monto,I.Monto,0 FROM inserted I inner join dbo.MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin
+	end
+	ELSE
+	begin
+		UPDATE P
+		SET SalarioBruto = SalarioBruto + I.Monto,SalarioNeto = SalarioBruto - TotalDeducciones
+		FROM dbo.PlanillaXMesXEmpleado P inner join inserted I ON P.IdEmpleado = I.IdEmpleado
+		inner join MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin and M.ID = P.idMes
+	end
+
+
+	IF(not EXISTS(SELECT P.IdEmpleado FROM dbo.PlanillaXSemanaXEmpleado P inner join inserted I on I.IdEmpleado = P.IdEmpleado and P.IdSemana =@IDSemanaActual) and @Inicio_Semana = @FechaMov)
+	begin
+		INSERT INTO dbo.PlanillaXSemanaXEmpleado(IdEmpleado,IdMovimientoPlanilla,IdPlanillaXMesXEmpleado,IdSemana,SalarioBruto,SalarioNeto,TotalDeducciones)
+		SELECT I.IdEmpleado,I.ID,P.ID,S.ID,I.Monto,I.Monto,0 FROM inserted I inner join dbo.MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin
+		inner join dbo.SemanaPlanilla S ON I.Fecha between S.FechaInicio and S.Fechafin
+		inner join dbo.PlanillaXMesXEmpleado P ON P.idMes = M.ID and P.IdEmpleado = I.IdEmpleado
+	end
+
+	ELSE IF(not EXISTS(SELECT P.IdEmpleado FROM dbo.PlanillaXSemanaXEmpleado P inner join inserted I on I.IdEmpleado = P.IdEmpleado))
+	begin
+		INSERT INTO dbo.PlanillaXSemanaXEmpleado(IdEmpleado,IdMovimientoPlanilla,IdPlanillaXMesXEmpleado,IdSemana,SalarioBruto,SalarioNeto,TotalDeducciones)
+		SELECT I.IdEmpleado,I.ID,P.ID,S.ID,I.Monto,I.Monto,0 FROM inserted I inner join dbo.MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin
+		inner join dbo.SemanaPlanilla S ON I.Fecha between S.FechaInicio and S.Fechafin
+		inner join dbo.PlanillaXMesXEmpleado P ON P.idMes = M.ID and P.IdEmpleado = I.IdEmpleado
+	end
+	ELSE
+	begin
+		UPDATE P
+		SET SalarioBruto = SalarioBruto + I.Monto,SalarioNeto = SalarioBruto - TotalDeducciones
+		FROM dbo.PlanillaXSemanaXEmpleado P inner join inserted I ON P.IdEmpleado = I.IdEmpleado
+		inner join dbo.SemanaPlanilla S ON I.Fecha between S.FechaInicio and S.Fechafin and P.IdSemana = S.ID
+	end
+
+end
+
+
+ElSE
+begin
+	UPDATE P
+	SET TotalDeducciones = CASE 
+							WHEN CAST(I.Monto AS Money) < 1 THEN (TotalDeducciones + SalarioBruto*I.Monto)
+							WHEN CAST(I.Monto AS Money) >= 1 THEN (TotalDeducciones + I.Monto) 
+							ELSE (TotalDeducciones + I.Monto) 
+							END, SalarioNeto = SalarioBruto  - TotalDeducciones
+	FROM dbo.PlanillaXMesXEmpleado P inner join inserted I ON P.IdEmpleado = I.IdEmpleado
+	inner join MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin and M.ID = P.idMes
+
+
+	UPDATE P
+	SET TotalDeducciones = CASE 
+							WHEN CAST(I.Monto AS Money) < 1 THEN (TotalDeducciones + SalarioBruto*I.Monto)
+							WHEN CAST(I.Monto AS Money) >= 1 THEN (TotalDeducciones + I.Monto) 
+							ELSE (TotalDeducciones + I.Monto) 
+							END, SalarioNeto = SalarioBruto  - TotalDeducciones
+	FROM dbo.PlanillaXSemanaXEmpleado P inner join inserted I on P.IdEmpleado = I.IdEmpleado
+	inner join SemanaPlanilla S ON I.Fecha between S.FechaInicio and S.Fechafin and S.ID = P.IdSemana
+
+
+	IF (not EXISTS(SELECT D.IdEmpleado FROM dbo.DeduccionesXMesXEmpleado D inner join inserted I ON I.IdEmpleado = D.IdEmpleado and D.idMes = @IDMesActual) or  @Inicio_Semana = @FechaMov)
+	begin
+		INSERT INTO dbo.DeduccionesXMesXEmpleado(IdEmpleado,IdMes,IdMovimiento,IdPlanillaXMesXEmpleado,Monto)
+		SELECT I.IdEmpleado,M.ID,I.ID,P.ID,P.TotalDeducciones FROM inserted I inner join dbo.MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin
+		inner join dbo.PlanillaXMesXEmpleado P ON P.idMes = M.ID and P.IdEmpleado = I.IdEmpleado
+	end
+	ELSE
+	begin
+		UPDATE D
+		SET Monto = P.TotalDeducciones
+		FROM dbo.DeduccionesXMesXEmpleado D inner join inserted I ON D.IdEmpleado = I.IdEmpleado
+		inner join MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin and M.ID = D.IdMes
+		inner join PlanillaXMesXEmpleado P ON P.IdEmpleado = I.IdEmpleado and M.ID = P.idMes
+	end
+end
