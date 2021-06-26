@@ -564,4 +564,4 @@ BEGIN
 
 	SET @CursorTestID = @CursorTestID + 1 
 end
-EXEC dbo.SETNETO
+EXEC dbo.SETNETO   
