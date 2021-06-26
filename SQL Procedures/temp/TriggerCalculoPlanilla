@@ -95,4 +95,4 @@ begin
 		inner join MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin and M.ID = D.IdMes
 		inner join PlanillaXMesXEmpleado P ON P.IdEmpleado = I.IdEmpleado and M.ID = P.idMes
 	end
-end
+end   
