@@ -1,106 +1,106 @@
-ALTER PROCEDURE [dbo].[SPMOVIMIENTOS]  @Fecha_Actual date
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[SPMOVIMIENTOS]  @Fecha_Actual date, @Fin_Semana date
 AS
 	declare @cntx int = 1
 	declare @cntrendx int
-	set @cntx = 1;
 	declare @monto int
-	select @cntrendx = COUNT(0) from dbo.MovimientoPlanilla;
-	while @cntx <= @cntrendx
+	declare @salario money = 0
+	declare @horas int
+	declare @horas_extra int
+	declare @monto_adicional money=0
 
-	begin
-		
-		IF ((SELECT TOP 1 FechaInicio FROM dbo.MesPlanilla ORDER BY FechaInicio DESC) = (@Fecha_Actual)) or not EXISTS (SELECT P.IdEmpleado FROM dbo.PlanillaXMesXEmpleado P inner join dbo.MovimientoPlanilla M ON P.IdEmpleado = M.IdEmpleado and M.ID = @cntx)
-			begin
 
-				--SELECT @cntx, Visible from dbo.MovimientoPlanilla
-				IF((SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 4 or (SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 5)
-					begin
-						
-						INSERT INTO dbo.PlanillaXMesXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,idMes)
-						SELECT 0,0,MP.Monto,MP.IdEmpleado,M.ID FROM dbo.MovimientoPlanilla MP 
-						inner join dbo.MesPlanilla M ON MP.ID = @cntx and MP.Fecha BETWEEN M.FechaInicio and M.FechaFin and MP.Fecha = @Fecha_Actual
-					--	SELECT P.IdEmpleado,TotalDeducciones,Monto FROM dbo.PlanillaXMesXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado
-						
-						
-						
-					
-					end
-				ELSE
-					begin
-						INSERT INTO dbo.PlanillaXMesXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,idMes)
-						SELECT MP.Monto,MP.Monto,0,MP.IdEmpleado,M.ID FROM dbo.MovimientoPlanilla MP 
-						inner join dbo.MesPlanilla M ON MP.ID = @cntx and MP.Fecha BETWEEN M.FechaInicio and M.FechaFin and MP.Fecha = @Fecha_Actual
-					--	SELECT P.IdEmpleado,SalarioBruto,Monto FROM dbo.PlanillaXMesXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado 
-					end
-			
-			end
-		ELSE 
-			begin
-
-				
-
-				IF((SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 4 or (SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 5)
-					begin
-		
-							UPDATE P
-								SET TotalDeducciones = CASE 
-													WHEN CAST(Monto AS Money) < 1 THEN (TotalDeducciones + SalarioBruto*Monto)
-													WHEN CAST(Monto AS Money) >= 1 THEN (TotalDeducciones + Monto) 
-													ELSE (TotalDeducciones + Monto) 
-												  END
-								FROM dbo.PlanillaXMesXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and P.idMes = (SELECT TOP 1 ID FROM dbo.MesPlanilla ORDER BY FechaInicio DESC) and MP.Fecha = @Fecha_Actual
-					
-
-					
-					end
-				ELSE
-					begin
-						UPDATE P
-						SET SalarioBruto = SalarioBruto + Monto, SalarioNeto = SalarioBruto - TotalDeducciones
-						FROM dbo.PlanillaXMesXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and P.idMes = (SELECT TOP 1 ID FROM dbo.MesPlanilla ORDER BY FechaInicio DESC) and MP.Fecha = @Fecha_Actual
-						--SELECT P.IdEmpleado,SalarioBruto,Monto FROM dbo.PlanillaXMesXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado 
-					end
-
-			end
-
-		IF not EXISTS (SELECT P.IdEmpleado FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla M ON P.IdEmpleado = M.IdEmpleado and M.ID = @cntx) or (SELECT TOP 1 FechaInicio FROM dbo.SemanaPlanilla ORDER BY FechaInicio DESC) = @Fecha_Actual
+	set @cntx = 1;
+			select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;
+			while @cntx <= @cntrendx
 			begin
 				
-					INSERT INTO dbo.PlanillaXSemanaXEmpleado(SalarioBruto,SalarioNeto,TotalDeducciones,IdEmpleado,IdSemana,IdMovimientoPlanilla,IdPlanillaXMesXEmpleado)
-					SELECT MP.Monto,MP.Monto,0,MP.IdEmpleado,S.ID,MP.ID,PM.ID FROM dbo.MovimientoPlanilla MP 
-					inner join dbo.SemanaPlanilla S ON MP.ID = @cntx and MP.Fecha BETWEEN S.FechaInicio and S.FechaFin and MP.Fecha = @Fecha_Actual
-					inner join dbo.PlanillaXMesXEmpleado PM ON PM.IdEmpleado = MP.IdEmpleado and PM.idMes = S.IdMes
-					--SELECT P.IdEmpleado,SalarioBruto,Monto FROM dbo.PlanillaXSemanaXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado
-					
-			end
-		ELSE 
-			begin
-				IF((SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 4 or (SELECT IdTipoMov FROM dbo.MovimientoPlanilla WHERE ID = @cntx) = 5)
+				set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @cntx), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @cntx))
+				IF (@horas <= 8)
 					begin
-						
-						UPDATE P
-						
-							SET TotalDeducciones = CASE 
-													WHEN CAST(Monto AS Money) < 1 THEN (TotalDeducciones + SalarioBruto*Monto)
-													WHEN CAST(Monto AS Money) >= 1 THEN (TotalDeducciones + Monto) 
-													ELSE (TotalDeducciones + Monto) 
-												  END
-							, IdMovimientoPlanilla = MP.ID
-							FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and MP.Fecha = @Fecha_Actual
-							
+						set @salario = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
 					end
 				ELSE
 					begin
-						UPDATE P
-						SET SalarioBruto = SalarioBruto + Monto, SalarioNeto = SalarioBruto - TotalDeducciones, IdMovimientoPlanilla = MP.ID
-						FROM dbo.PlanillaXSemanaXEmpleado P inner join dbo.MovimientoPlanilla MP ON MP.ID = @cntx and P.IdEmpleado = MP.IdEmpleado and MP.Fecha = @Fecha_Actual
-						--SELECT P.IdEmpleado,SalarioBruto,Monto FROM dbo.PlanillaXSemanaXEmpleado P inner join  dbo.MovimientoPlanilla M ON M.ID = @cntx and P.IdEmpleado = M.IdEmpleado 
-					end
-			end
-			
+						set @salario = (8 * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
+						SET @horas_extra = @horas - 8
+						
+						IF EXISTS (SELECT Fecha FROM dbo.Feriados WHERE Fecha = @Fecha_Actual) or DATEPART(DW, @Fecha_Actual) = 1
+							begin
+								
+								set @monto_adicional = (2*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
+								
+								
+								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+								SELECT FechaSalida,@monto_adicional,3,E.ID,1 FROM dbo.MarcasAsistencia MA
+								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
 
+							end
+						ELSE
+							begin
+								set @monto_adicional = (1.5*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
+								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+								SELECT FechaSalida,@monto_adicional,2,E.ID,1 FROM dbo.MarcasAsistencia MA
+								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+							end
+					
+					end
+				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+				SELECT FechaSalida,@salario,1,E.ID,1 FROM dbo.MarcasAsistencia MA
+				inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+				
+					
+				
+
+				
+				
+				set @cntx = @cntx +1
+			end
+			--SELECT ID FROM dbo.MovimientoPlanilla WHERE Fecha = @Fecha_Actual
+			SET IDENTITY_INSERT dbo.MovimientoHoras ON
+			INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
+			SELECT MP.ID,MA.ID FROM dbo.MovimientoPlanilla MP inner join dbo.MarcasAsistencia MA ON (MP.IdTipoMov = 1 or MP.IdTipoMov = 2 or MP.IdTipoMov = 3)
+			inner join dbo.Empleado E ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and E.ID = MP.IdEmpleado and CONVERT(DATE,MA.FechaSalida) = MP.Fecha and CONVERT(DATE,MA.FechaSalida) = @Fecha_Actual
+			SET IDENTITY_INSERT dbo.MovimientoHoras OFF
+
+			IF (@Fecha_Actual = @Fin_Semana)
+			begin
+			set @cntx = 1;
+			select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
+			while @cntx <= @cntrendx
+				begin
 		
-		
-		set @cntx = @cntx +1
-	end
+				if (SELECT TOP 1 Visible FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx) = 1
+				begin
+					INSERT INTO [dbo].[MovimientoPlanilla]
+						   ([Fecha]
+						   ,[Monto]
+						   ,[IdTipoMov]
+						   ,[IdEmpleado]
+						   ,[Visible])
+					 VALUES
+						   (@Fecha_Actual
+						   ,(SELECT TOP 1 Monto FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+						   ,4
+						   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
+						   ,1)
+
+					SET IDENTITY_INSERT dbo.MovimientoDeduccion ON
+					INSERT INTO [dbo].[MovimientoDeduccion]
+					   ([ID]
+					   ,[IdTipoDeduccion])
+					 VALUES
+						   ((SELECT COUNT(0) from dbo.MovimientoPlanilla)
+						   ,(SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx))
+					SET IDENTITY_INSERT dbo.MovimientoDeduccion OFF
+				end
+
+				set @cntx = @cntx +1
+				end
+			end
+
 
