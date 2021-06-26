@@ -1,7 +1,7 @@
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea2.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -356,6 +356,10 @@ BEGIN
 			--en caso de ser fin de semana:
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
+					
+						
+
+
 					-- insertamos los empleados que se ingresan hoy
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
@@ -387,8 +391,20 @@ BEGIN
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
-					
+
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
 				end
+					
 			-- en caso de ser un dia normal:
 			ELSE
 				begin
@@ -403,6 +419,18 @@ BEGIN
 							idPuesto int,
 							idTipoDocumentacionIdentidad int
 							)
+
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
 				end	
 				EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
@@ -422,6 +450,19 @@ BEGIN
 						ValorDocumentoIdentidad varchar(16)
 					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
 
+
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
+
 				end
 			-- si es otro dia:
 			ELSE
@@ -432,6 +473,20 @@ BEGIN
 					WITH(
 						ValorDocumentoIdentidad varchar(16)
 					)
+
+
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
+
 				end
 				EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
@@ -451,7 +506,16 @@ BEGIN
 							Monto money
 						) cr
 
-
+				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Asocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
 
 			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
@@ -470,6 +534,18 @@ BEGIN
 						ValorDocumentoIdentidad varchar(16)
 					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
+
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Desasocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
 			end
 			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
@@ -488,6 +564,19 @@ BEGIN
 							IdJornada int,
 							ValorDocumentoIdentidad int
 						) cr
+
+
+				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'Tipo de Jornada Proxima Semana' FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
 			--end
 			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
@@ -530,6 +619,18 @@ BEGIN
 				--end
 				--set @cntx = @cntx +1
 			--end
+
+			IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3) WITH (ProduceError int) where ProduceError = 1)
+					BEGIN
+						BEGIN TRY
+							SELECT 1/0
+						END TRY
+						BEGIN CATCH
+							SELECT Secuencia, ProduceError,'MarcaAsistencia' FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							exec SP_ERRORINFO
+						END CATCH
+					END
+
 			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 
 		end
@@ -564,4 +665,4 @@ BEGIN
 
 	SET @CursorTestID = @CursorTestID + 1 
 end
-EXEC dbo.SETNETO   
+EXEC dbo.SETNETO
