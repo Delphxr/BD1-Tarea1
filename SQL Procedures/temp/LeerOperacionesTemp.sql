@@ -547,6 +547,7 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @NuevoEmpleado);
 
+	--verificamos si estas operaciones ya se finalizaron
 	IF @SubCursorID != @SubRowCnt
 	BEGIN
 		--iniciamos loop de nuevo empleado
@@ -624,95 +625,168 @@ BEGIN
 	
 			SET @SubCursorID = @SubCursorID +1
 		END
+		--guardamos en detalle corrida ya que terminó la ejecucion
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 1, --1=nuevo empleado
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
 	END
 
-	--guardamos en detalle corrida ya que terminó la ejecucion
-	EXEC [dbo].[NuevoDetalleCorrida]
-		@inIdCorrida = @CorridaActual,
-		@inTipoOperacion = 1, --1=nuevo empleado
-		@inRefID = @SubRowCnt,
-		@OutResultCode = @dummyReturnCode OUTPUT
+	
 
+	-- ########################### --
+	-- ##== ELIMINAR EMPLEADO ==## --
+	-- ########################### --
 
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 2, -- 2= eliminarEmpleadoo
+			@outResultado = @DetalleCorrida OUTPUT
 
-	--eliminar empleado
-	if (@subxml.value('(/root/EliminarEmpleado/EliminarEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuancia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
 
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @EliminarEmpleado);
+
+	IF @SubCursorID != @SubRowCnt
+	BEGIN
+		--iniciamos loop de eliminar empleado
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
 			if(@Fecha_Actual = @Fin_Semana)
-				begin
-					Update Empleado
-					SET Visible = 0
-					FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) 
-					WITH(
-						ValorDocumentoIdentidad varchar(16)
-					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
+			BEGIN
+				Update Empleado
+				SET Visible = 0
+				FROM @EliminarEmpleado AS X 
+				inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
+				WHERE Secuencia=@SubCursorID
 
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+				--eliminamos los empleados que se han ido acumulando
+				Update Empleado
+				SET Visible = 0
+				FROM @EliminarEmpleadoTemp AS X 
+				inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
+				
+
+				IF (SELECT TOP 1 ProduceError FROM @EliminarEmpleado WHERE Secuencia=@SubCursorID) = 1
+				BEGIN
+					BEGIN TRY
+						SELECT 1/0
+					END TRY
+					BEGIN CATCH
+						--guardamos el error en detalle corrida y volvemos al inicio
+							EXEC [dbo].[NuevoDetalleCorrida]
+								@inIdCorrida = @CorridaActual,
+								@inTipoOperacion = 2, --2=eliminar empleado
+								@inRefID = @SubCursorID,
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @SubCursorID = @SubCursorID +1
+							CONTINUE
+					END CATCH
+				END
 
 
-				end
-			-- si es otro dia:
-			ELSE
-				begin
-					INSERT INTO @EliminarEmpleadoTemp(ValorDocumentoIdentidad)
-					SELECT ValorDocumentoIdentidad
-					FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3)
-					WITH(
-						ValorDocumentoIdentidad varchar(16)
-					)
+			END
+		-- si es otro dia:
+		ELSE
+			begin
+				INSERT INTO @EliminarEmpleadoTemp(ValorDocumentoIdentidad)
+				SELECT ValorDocumentoIdentidad
+				FROM @EliminarEmpleado WHERE Secuencia=@SubCursorID
 
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+				IF (SELECT TOP 1 ProduceError FROM @EliminarEmpleado WHERE Secuencia=@SubCursorID) = 1
+				BEGIN
+					BEGIN TRY
+						SELECT 1/0
+					END TRY
+					BEGIN CATCH
+						--guardamos el error en detalle corrida y volvemos al inicio
+							EXEC [dbo].[NuevoDetalleCorrida]
+								@inIdCorrida = @CorridaActual,
+								@inTipoOperacion = 2, --2=eliminar empleado
+								@inRefID = @SubCursorID,
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @SubCursorID = @SubCursorID +1
+							CONTINUE
+					END CATCH
+				END
+			END
+			SET @SubCursorID = @SubCursorID +1
+		END
+			--guardamos en detalle corrida ya que terminó la ejecucion
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 2, --2= eliminarEmpleadoo
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
+	END
 
 
-				end
-		end
+	-- ######################### --
+	-- ##== NUEVA DEDUCCION ==## --
+	-- ######################### --
 
-	-- cargamos asocia empleado con deduccion en caso de que haya
-	if (@subxml.value('(/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion/@Secuencia)[1]', 'varchar(64)') is not null)
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 3, -- 3= nuevadeduccion
+			@outResultado = @DetalleCorrida OUTPUT
 
-		begin
-				INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
-					SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
-					FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3)
-						WITH (
-							IdDeduccion int,
-							ValorDocumentoIdentidad int,
-							Monto money
-						) cr
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuencia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
 
-				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Asocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @AsociaEmpleadoConDeduccion);
 
-		end
+	IF @SubCursorID != @SubRowCnt
+	BEGIN
+		--iniciamos loop de nueva deduccion
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
+			INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
+				SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
+				FROM @AsociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID
+
+			IF (SELECT TOP 1 ProduceError FROM @AsociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
+			BEGIN
+				BEGIN TRY
+					SELECT 1/0
+				END TRY
+				BEGIN CATCH
+					--guardamos el error en detalle corrida y volvemos al inicio
+					EXEC [dbo].[NuevoDetalleCorrida]
+						@inIdCorrida = @CorridaActual,
+						@inTipoOperacion = 3, -- 3= nuevadeduccion
+						@inRefID = @SubCursorID,
+						@OutResultCode = @dummyReturnCode OUTPUT
+					SET @SubCursorID = @SubCursorID +1
+					CONTINUE
+				END CATCH
+			END
+			SET @SubCursorID = @SubCursorID +1	
+		END
+	END
+
+
 
 		-- cargamos desasocia empleado con deduccion en caso de que haya
 	if (@subxml.value('(/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion/@Secuencia)[1]', 'varchar(64)') is not null)
