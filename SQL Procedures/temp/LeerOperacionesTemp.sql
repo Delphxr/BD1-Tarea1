@@ -308,7 +308,59 @@ DECLARE @EliminarEmpleadoTemp TABLE(
 						ValorDocumentoIdentidad VARCHAR(16)
 						)
 
+-- ============================================================= --
+-- Tablas Variable donde guardamos las operaciones de cada fecha --
+-- ============================================================= --
 
+DECLARE @NuevoEmpleado TABLE(
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	Nombre VARCHAR(128),
+	IdTipoDocumentoIdentidad INT,
+	IdPuesto INT,
+	IdDepartamento INT,
+	FechaNacimiento DATE,
+	Username VARCHAR(64),
+	Passwrd VARCHAR(64),
+	ProduceError INT
+)
+
+DECLARE @EliminarEmpleado TABLE(
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	ProduceError INT
+)
+
+DECLARE @AsociaEmpleadoConDeduccion TABLE(
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	IdDeduccion INT,
+	Monto MONEY,
+	ProduceError INT
+)
+
+DECLARE @DesasociaEmpleadoConDeduccion TABLE (
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	IdDeduccion INT,
+	ProduceError INT
+)
+
+DECLARE @NuevasJornadas TABLE(
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	IdJornada INT,
+	ProduceError INT
+)
+
+DECLARE @MarcaAsistencia TABLE(
+	Secuencia INT,
+	ValorDocumentoIdentidad VARCHAR(16),
+	FechaEntrada DATETIME,
+	FechaSalida DATETIME,
+	ProduceError INT
+)
+-- ============================================================= --
 
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
@@ -323,24 +375,156 @@ print 'fin generar tablas variable e inicio de loop 2'
 
 -- ahora vamos a iterar de nuevo y realizar las operaciones de cada columna
 DECLARE @Fecha_Actual DATE
+DECLARE @resultadoCorrida INT
+DECLARE @CorridaActual INT --aqui vamos a guardar el Id de la corrida actual
+DECLARE @dummyReturnCode INT --para los SP que requieren un output
 WHILE @CursorTestID <= @RowCnt
 BEGIN
 	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
-	SELECT [Fecha_Actual] = @Fecha_Actual
+	
+	--revisamos los detalles de la corrida de la fecha actual
+	-- para saber si ya se termino de ejecutar(2), aun esta en proceso(1), o del todo no ha empezado (3)
+	EXEC	[dbo].[GetResultadoCorrida]
+		@inFechaOperacion = @Fecha_Actual,
+		@outResultado = @resultadoCorrida OUTPUT
 
-
+	IF @resultadoCorrida = 3 OR @resultadoCorrida = 1
+	BEGIN
+		--creamos una nueva corrida
+		EXEC	[dbo].[NuevaCorrida]
+			@inFechaOperacion = @Fecha_Actual,
+			@inTipoRegistro = 1, --inicio de corrida
+			@OutResultCode = @dummyReturnCode OUTPUT
+		SET @CorridaActual = SCOPE_IDENTITY()
+	END
+	ELSE --si la fecha actual ya se ejecuto cambiamos a la siguiente
+	BEGIN
+		SET @CursorTestID = @CursorTestID + 1 
+		CONTINUE
+	END
+		
 
 	-- cargamos el xml para la fecha actual
 	set @subxml = (select TOP 1 Operaciones FROM @TablaOperaciones WHERE id = @CursorTestID)
 	EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml
 
+	--Limpiamos las tablas variable y luego las llenamos de los datos que ocupamos --
+	-- =========================================================================== --
+	DELETE FROM @NuevoEmpleado
+	DELETE FROM @EliminarEmpleado
+	DELETE FROM @AsociaEmpleadoConDeduccion
+	DELETE FROM @AsociaEmpleadoConDeduccion
+	DELETE FROM @NuevasJornadas
+	DELETE FROM @MarcaAsistencia
+
+	INSERT INTO @NuevoEmpleado (
+			Secuencia,
+			ValorDocumentoIdentidad,
+			Nombre,
+			IdTipoDocumentoIdentidad,
+			IdPuesto,
+			IdDepartamento,
+			FechaNacimiento,
+			Username,
+			Passwrd,
+			ProduceError)
+		SELECT Secuencia,ValorDocumentoIdentidad,Nombre,idTipoDocumentacionIdentidad,idPuesto,idDepartamento,FechaNacimiento,Username,Password,ProduceError
+		FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
+		WITH(
+			Secuencia INT,
+			ValorDocumentoIdentidad VARCHAR(16),
+			Nombre VARCHAR(128),
+			idTipoDocumentacionIdentidad INT,
+			idPuesto INT,
+			idDepartamento INT,
+			FechaNacimiento DATE,
+			Username VARCHAR(64),
+			Password VARCHAR(64),
+			ProduceError INT
+			)
+
+	INSERT INTO @EliminarEmpleado (
+			Secuencia,
+			ValorDocumentoIdentidad,
+			ProduceError)
+		SELECT Secuencia,ValorDocumentoIdentidad,ProduceError
+		FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) 
+		WITH(
+			Secuencia INT,
+			ValorDocumentoIdentidad VARCHAR(16),
+			ProduceError INT
+		) 
+
+	INSERT INTO @AsociaEmpleadoConDeduccion(
+			Secuencia,
+			ValorDocumentoIdentidad,
+			IdDeduccion,
+			Monto,
+			ProduceError)
+		SELECT Secuencia,ValorDocumentoIdentidad,IdDeduccion,Monto,ProduceError
+		FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3)
+		WITH (
+			Secuencia INT,
+			ValorDocumentoIdentidad VARCHAR(16),
+			IdDeduccion INT,			
+			Monto MONEY,
+			ProduceError INT
+		)
+
+	INSERT INTO @DesasociaEmpleadoConDeduccion(
+			Secuencia,
+			ValorDocumentoIdentidad,
+			IdDeduccion,
+			ProduceError)
+			SELECT Secuencia,ValorDocumentoIdentidad,IdDeduccion,ProduceError
+			FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3)
+			WITH(
+				Secuencia INT,
+				ValorDocumentoIdentidad VARCHAR(16),
+				IdDeduccion INT,
+				ProduceError INT
+			)
+
+	INSERT INTO @NuevasJornadas (
+			Secuencia,
+			ValorDocumentoIdentidad,
+			IdJornada,
+			ProduceError)
+			SELECT Secuencia,ValorDocumentoIdentidad,IdJornada,ProduceError
+			FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3)
+			WITH (
+				Secuencia INT,
+				ValorDocumentoIdentidad VARCHAR(16),
+				IdJornada INT,
+				ProduceError INT					
+			)
+
+	INSERT INTO @MarcaAsistencia (
+			Secuencia,
+			ValorDocumentoIdentidad,
+			FechaEntrada,
+			FechaSalida,
+			ProduceError)
+			SELECT Secuencia,ValorDocumentoIdentidad,FechaEntrada,FechaSalida,ProduceError
+			FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3)
+			WITH (
+				Secuencia INT,
+				ValorDocumentoIdentidad VARCHAR(16),
+				FechaEntrada DATETIME,
+				FechaSalida DATETIME,
+				ProduceError INT
+			)
+
+	-- ========================================================= --
 
 
-	--usuarios de empleados
+					
+
+
+	--si no es nulo realizamos la insercion del empleado
 	if (@subxml.value('(/root/NuevoEmpleado/NuevoEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			
-			-- insertamos los empleados que se ingresan hoy
+			-- insertamos los USUARIOS que se ingresan hoy (ESTOS SE INGRESAN SIN IMPORTAR EL DIA DE LA SEMANA)
 			INSERT INTO dbo.Usuarios (Username,Pwd,Tipo)
 			SELECT Username,Password,2
 			FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
@@ -348,20 +532,12 @@ BEGIN
 				Username varchar(64),
 				Password varchar(64)
 				)
-		end
 
-
-
-
-
-	--si no es nulo realizamos la insercion del empleado
-	if (@subxml.value('(/root/NuevoEmpleado/NuevoEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin
 			--en caso de ser fin de semana:
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 
-					-- insertamos los empleados que se ingresan hoy
+					-- insertamos los EMPLEADOS que se ingresan hoy
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
@@ -583,27 +759,7 @@ BEGIN
 
 			EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
 
-			
-			--set @cntx = 1;
-			--select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;
-			--while @cntx <= @cntrendx
-			--begin
-				
-				--set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @cntx), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @cntx))
-				--set @monto = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
-				--begin
-				
-					--INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov)
-					--SELECT FechaSalida,@monto,1 FROM dbo.MarcasAsistencia WHERE ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual
-
-					--SET IDENTITY_INSERT dbo.MovimientoHoras ON
-					--INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
-					--SELECT ID,1 FROM dbo.MovimientoPlanilla
-					--SET IDENTITY_INSERT dbo.MovimientoHoras OFF
-
-				--end
-				--set @cntx = @cntx +1
-			--end
+		
 
 			IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
@@ -641,9 +797,7 @@ BEGIN
 			SET Visible = 0
 		end
 	commit transaction Marca
-	--EXEC dbo.SPMOVIMIENTOS3 @Fecha_Actual
-	--EXEC dbo.SPMOVIMIENTOS2 @Fecha_Actual
-	--SELECT * FROM dbo.MovimientoPlanilla
+
 	
 	
 
