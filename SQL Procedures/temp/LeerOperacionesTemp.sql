@@ -286,11 +286,6 @@ print 'fin del priemr while'
 --select * from @TablaOperaciones
 
 print 'declaramos tablas variable'
---reiniciamos todo lo necesario para iterar de nuevo
-set @CursorTestID = 1;
-set  @RowCnt = 0;
-SELECT @RowCnt = COUNT(0) FROM @TablaOperaciones;
-
 -- creamos las tablas temporales donde vamos a guardar
 -- los datos que se ingresan cuando no es fin de semana
 
@@ -377,7 +372,17 @@ print 'fin generar tablas variable e inicio de loop 2'
 DECLARE @Fecha_Actual DATE
 DECLARE @resultadoCorrida INT
 DECLARE @CorridaActual INT --aqui vamos a guardar el Id de la corrida actual
+DECLARE @DetalleCorrida INT
 DECLARE @dummyReturnCode INT --para los SP que requieren un output
+
+DECLARE @SubCursorID INT --cursor para los loops anidados
+DECLARE @SubRowCnt INT
+
+--reiniciamos todo lo necesario para iterar de nuevo
+set @CursorTestID = 1;
+set  @RowCnt = 0;
+SELECT @RowCnt = COUNT(0) FROM @TablaOperaciones;
+
 WHILE @CursorTestID <= @RowCnt
 BEGIN
 	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
@@ -517,50 +522,55 @@ BEGIN
 
 	-- ========================================================= --
 
+	-- ahora comenzamos a hacer las corridas
 
-					
+	-- ######################## --
+	-- ##== NUEVO EMPLEADO ==## --
+	-- ######################## --
 
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 1, -- 1= NuevoEmpleadoo
+			@outResultado = @DetalleCorrida OUTPUT
 
-	--si no es nulo realizamos la insercion del empleado
-	if (@subxml.value('(/root/NuevoEmpleado/NuevoEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin
-			-- insertamos los USUARIOS que se ingresan hoy (ESTOS SE INGRESAN SIN IMPORTAR EL DIA DE LA SEMANA)
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuancia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
+
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @NuevoEmpleado);
+
+	IF @SubCursorID != @SubRowCnt
+	BEGIN
+		--iniciamos loop de nuevo empleado
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
+			-- insertamos los USUARIOS que se ingresan hoy (ESTOS SE INGRESAN SIN IMPORTAR EL DIA DE LA SEMANA U ERROR)
 			INSERT INTO dbo.Usuarios (Username,Pwd,Tipo)
-			SELECT Username,Password,2
-			FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
-			WITH(
-				Username varchar(64),
-				Password varchar(64)
-				)
+			SELECT Username,Passwrd,2
+			FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
 			--en caso de ser fin de semana:
 			if(@Fecha_Actual = @Fin_Semana)
-				begin
-
+				BEGIN
 					-- insertamos los EMPLEADOS que se ingresan hoy
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
-					FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
-					WITH (
-						FechaNacimiento DATE,
-						Nombre varchar(100),
-						idDepartamento int,
-						ValorDocumentoIdentidad int,
-						idPuesto int,
-						idTipoDocumentacionIdentidad int
-						)
+					FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
 
 					--colocamos los usuarios en los empleados
 					Update dbo.Empleado
-					SET IdUsuario = (Select top 1 ID from dbo.Usuarios c where c.username = XMLDATA.Username and c.Pwd = XMLDATA.Password)
-					FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
-					WITH(
-						Username varchar(64),
-						Password varchar(64),
-						ValorDocumentoIdentidad int
-					) XMLDATA
-					where IdUsuario = 1 and dbo.Empleado.ValorDocumentoIdentidad = XMLDATA.ValorDocumentoIdentidad
+					SET IdUsuario = (Select top 1 ID from dbo.Usuarios c where c.username = XMLDATA.Username and c.Pwd = XMLDATA.Passwrd)
+					FROM @NuevoEmpleado XMLDATA
+					where IdUsuario = 1 and dbo.Empleado.ValorDocumentoIdentidad = XMLDATA.ValorDocumentoIdentidad AND XMLDATA.Secuencia=@SubCursorID
 					
 
 
@@ -569,47 +579,61 @@ BEGIN
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF (SELECT TOP 1 ProduceError FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID) = 1
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
+						--guardamos el error en detalle corrida y volvemos al inicio
+							EXEC [dbo].[NuevoDetalleCorrida]
+								@inIdCorrida = @CorridaActual,
+								@inTipoOperacion = 1, --1=nuevo empleado
+								@inRefID = @SubCursorID,
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @SubCursorID = @SubCursorID +1
+							CONTINUE
 						END CATCH
 					END
-
-				end
+				END
 					
 			-- en caso de ser un dia normal:
 			ELSE
 				begin
 					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idUsuario,idTipoDocumentacionIdentidad)
 						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad
-						FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
-						WITH (
-							FechaNacimiento DATE,
-							Nombre varchar(100),
-							idDepartamento int,
-							ValorDocumentoIdentidad int,
-							idPuesto int,
-							idTipoDocumentacionIdentidad int
-							)
+						FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF (SELECT TOP 1 ProduceError FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID) = 1
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
+							--guardamos el error en detalle corrida y volvemos al inicio
+							EXEC [dbo].[NuevoDetalleCorrida]
+								@inIdCorrida = @CorridaActual,
+								@inTipoOperacion = 1, --1=nuevo empleado
+								@inRefID = @SubCursorID,
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @SubCursorID = @SubCursorID +1
+							CONTINUE
 						END CATCH
 					END
-
 				end	
-		end
+	
+			SET @SubCursorID = @SubCursorID +1
+		END
+	END
+
+	--guardamos en detalle corrida ya que terminó la ejecucion
+	EXEC [dbo].[NuevoDetalleCorrida]
+		@inIdCorrida = @CorridaActual,
+		@inTipoOperacion = 1, --1=nuevo empleado
+		@inRefID = @SubRowCnt,
+		@OutResultCode = @dummyReturnCode OUTPUT
+
+
 
 	--eliminar empleado
 	if (@subxml.value('(/root/EliminarEmpleado/EliminarEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
