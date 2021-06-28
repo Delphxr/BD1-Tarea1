@@ -1,7 +1,13 @@
+
+SET NOCOUNT ON
+BEGIN TRY
+BEGIN TRANSACTION
+
+
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -10,7 +16,7 @@ DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
 
 
-
+print 'iniciando a leer catalogos'
 --  ============================
 --  || cargamos los catalogos ||
 --  ============================ 
@@ -128,11 +134,13 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
 	tipo INT
     )
 
-
-
+print 'terminando a leer catalogos'
+print 'iniciando a limpiar base de datos'
 --  ============================================
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================
+DELETE FROM dbo.Historial
+DBCC CHECKIDENT ('Historial', RESEED, 0)
 DELETE FROM dbo.DeduccionesXMesXEmpleado
 DBCC CHECKIDENT ('DeduccionesXMesXEmpleado', RESEED, 0)
 DELETE FROM dbo.PlanillaXSemanaXEmpleado/*Limpia la tabla Empleados*/
@@ -158,52 +166,36 @@ DBCC CHECKIDENT ('Jornada', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
 
-
+print 'terminando limpiar base de datos'
 
 -- esta tabla es para guardar las operaciones que vamos a hacer, donde cada fila es un dia diferente
 DECLARE @TablaOperaciones TABLE(
-	ID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED, --el id es para cuando hagamos la iteracion de la tabla
+	ID INT IDENTITY(1,1) PRIMARY KEY, --el id es para cuando hagamos la iteracion de la tabla
 	XmlData XML, --aqui vamos a guardar los nodos de cada operacion para luego dividirlos por categoria
 	Fecha DATE,
-	NuevoEmpleado XML,
-	EliminarEmpleado XML,
-	AsociaEmpleadoConDeduccion XML,
-	DesasociaEmpleadoConDeduccion XML,
-	TipoDeJornadaProximaSemana XML,
-	MarcaDeAsistencia XML
+	Operaciones XML
 )
 
+declare @xmlvacio XML = ''
 -- guardamos en la tabla de operaciones las operaciones a realizar
 INSERT INTO @TablaOperaciones(
 	XmlData,
-	Fecha,
-	NuevoEmpleado,
-	EliminarEmpleado,
-	AsociaEmpleadoConDeduccion,
-	DesasociaEmpleadoConDeduccion,
-	TipoDeJornadaProximaSemana,
-	MarcaDeAsistencia
+	Fecha
 )
 SELECT * 
 FROM OPENXML (@hdoc,'/Datos/Operacion',3)
 WITH (
 	XmlData XML '.',
-	Fecha DATE,
-	NuevoEmpleado XML,
-	EliminarEmpleado XML,
-	AsociaEmpleadoConDeduccion XML,
-	DesasociaEmpleadoConDeduccion XML,
-	TipoDeJornadaProximaSemana XML,
-	MarcaDeAsistencia XML
+	Fecha DATE
 )
+print 'terminando ingresar operaiciones'
+
+
 
 DECLARE @Fin_Semana DATE = (SELECT TOP (1) [Fecha] FROM @TablaOperaciones);
-
-SELECT [Fin_Semana] = @Fin_Semana;
-
 DECLARE @Fin_Mes DATE = DATEADD(WEEK,3,(SELECT TOP (1) [Fecha] FROM @TablaOperaciones));
 
-SELECT [Fin_Mes] = @Fin_Mes;
+
 
 INSERT INTO dbo.MesPlanilla(FechaInicio,FechaFin)
 VALUES(@Fin_Semana,@Fin_Mes)
@@ -215,72 +207,85 @@ DECLARE @CursorTestID INT = 1; --cursor para iterar por la tabla
 DECLARE @RowCnt BIGINT = 0;
 SELECT @RowCnt = COUNT(0) FROM @TablaOperaciones;
 
-DECLARE @main xml = '<root></root>' --plantilla para cuando insertemos las operaciones a las comunas
- --iteramos por la tabla
+DECLARE @main xml --plantilla para cuando insertemos las operaciones a las comunas
+DECLARE @xmltemporal xml --temporal para ir insertando las varas 
+
+print 'iniciando primer while'
 WHILE @CursorTestID <= @RowCnt
 BEGIN
-	-- en los update lo que hacemos es tomar los nodos con el nombre necesario de cada dia
-	-- y moverlos a la columna necesaria
-	--insertamos las operaciones de insertar empleados
 
 	
+	set @main = '<root>
+		<NuevoEmpleado></NuevoEmpleado>
+		<EliminarEmpleado></EliminarEmpleado>
+		<AsociaEmpleadoConDeduccion></AsociaEmpleadoConDeduccion>
+		<DesasociaEmpleadoConDeduccion></DesasociaEmpleadoConDeduccion>
+		<TipoDeJornadaProximaSemana></TipoDeJornadaProximaSemana>
+		<MarcaDeAsistencia></MarcaDeAsistencia>
+	</root>'
 
+	--nuevo empleado
+	set @xmltemporal = (select XmlData.query('/Operacion/NuevoEmpleado') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
 
-	UPDATE @TablaOperaciones 
-		SET NuevoEmpleado = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/NuevoEmpleado') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and NuevoEmpleado IS NOT NULL
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/NuevoEmpleado)[1] ')
 
-	--insertamos las operaciones de eliminar empleados
-	UPDATE @TablaOperaciones
-		SET EliminarEmpleado = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/EliminarEmpleado') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and EliminarEmpleado IS NOT NULL;
-	
-	--insertamos las operaciones de asociar con deduccion
-	UPDATE @TablaOperaciones
-		SET AsociaEmpleadoConDeduccion = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/AsociaEmpleadoConDeduccion') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and AsociaEmpleadoConDeduccion IS NOT NULL;
+	--eliminar empleado
+	set @xmltemporal = (select XmlData.query('/Operacion/EliminarEmpleado') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/EliminarEmpleado)[1] ')
 
-	--insertamos las operaciones de desasociar deduccion
-	UPDATE @TablaOperaciones
-		SET DesasociaEmpleadoConDeduccion = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/DesasociaEmpleadoConDeduccion') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and DesasociaEmpleadoConDeduccion IS NOT NULL;
+	--AsociaEmpleadoConDeduccion
+	set @xmltemporal = (select XmlData.query('/Operacion/AsociaEmpleadoConDeduccion') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/AsociaEmpleadoConDeduccion)[1] ')
 
-	--insertamos las operaciones de tipo jornada
-	UPDATE @TablaOperaciones
-		SET TipoDeJornadaProximaSemana = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/TipoDeJornadaProximaSemana') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and TipoDeJornadaProximaSemana IS NOT NULL;
+	--DesasociaEmpleadoConDeduccion
+	set @xmltemporal = (select XmlData.query('/Operacion/DesasociaEmpleadoConDeduccion') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/DesasociaEmpleadoConDeduccion)[1] ')
 
-	--insertamos las operaciones de marca de asistencia
-	UPDATE @TablaOperaciones
-		SET MarcaDeAsistencia = (
-				 SELECT @main.query('/root/*'), XmlData.query('/Operacion/MarcaDeAsistencia') 
-				 FOR XML RAW(''),ROOT('root'), ELEMENTS, TYPE
-				 )
-		WHERE ID = @CursorTestID and MarcaDeAsistencia IS NOT NULL;
+	--TipoDeJornadaProximaSemana
+	set @xmltemporal = (select XmlData.query('/Operacion/TipoDeJornadaProximaSemana') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/TipoDeJornadaProximaSemana)[1] ')
+
+	--MarcaDeAsistencia
+	set @xmltemporal = (select XmlData.query('/Operacion/MarcaDeAsistencia') 
+		from @TablaOperaciones 
+		WHERE ID = @CursorTestID)
+	set @main.modify('             
+	insert sql:variable("@xmltemporal")             
+	into (/root/MarcaDeAsistencia)[1] ')
+
+	update @TablaOperaciones
+		set Operaciones = @main
+		where ID = @CursorTestID
 
 
 	
 	SET @CursorTestID = @CursorTestID + 1 
 END
 
-select * from @TablaOperaciones
+print 'fin del priemr while'
+--select * from @TablaOperaciones
 
-
+print 'declaramos tablas variable'
 --reiniciamos todo lo necesario para iterar de nuevo
 set @CursorTestID = 1;
 set  @RowCnt = 0;
@@ -308,62 +313,58 @@ DECLARE @EliminarEmpleadoTemp TABLE(
 
 declare @subxml xml --subxml para realizar las operaciones de cada columna
 
---declare @cntx int = 1;
---declare @cntrendx int;
---declare @monto money = 0
---declare @horas int
---declare @marcaasistenciatempx TABLE(id int identity(1,1) primary key,FechaEntrada datetime,FechaSalida datetime,ValorDocumentoIdentidad int)
 
 
+
+print 'fin generar tablas variable e inicio de loop 2'
 --  ==================================================================================================
 --  || este loop es el que hace las operaciones, de momento lo unico que hace es imprimir los datos ||
 --  ================================================================================================== 
 
 -- ahora vamos a iterar de nuevo y realizar las operaciones de cada columna
+DECLARE @Fecha_Actual DATE
 WHILE @CursorTestID <= @RowCnt
 BEGIN
-	DECLARE @Fecha_Actual DATE = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
-	--SELECT [Fecha_Actual] = @Fecha_Actual
+	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
+	SELECT [Fecha_Actual] = @Fecha_Actual
 
 
 
-	-- cargamos los usuarios de nuevo empleado
-	set @subxml = (select TOP 1 NuevoEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
-	--si no es nulo realizamos la insercion del empleado
-	if (@subxml is not null)
+	-- cargamos el xml para la fecha actual
+	set @subxml = (select TOP 1 Operaciones FROM @TablaOperaciones WHERE id = @CursorTestID)
+	EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml
+
+
+
+	--usuarios de empleados
+	if (@subxml.value('(/root/NuevoEmpleado/NuevoEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-						-- insertamos los empleados que se ingresan hoy
-						INSERT INTO dbo.Usuarios (Username,Pwd,Tipo)
-						SELECT Username,Password,2
-						FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
-						WITH(
-							Username varchar(64),
-							Password varchar(64)
-							)
-			exec sp_xml_removedocument @hdoc
+			
+			-- insertamos los empleados que se ingresan hoy
+			INSERT INTO dbo.Usuarios (Username,Pwd,Tipo)
+			SELECT Username,Password,2
+			FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
+			WITH(
+				Username varchar(64),
+				Password varchar(64)
+				)
 		end
 
 
 
 
-	-- cargamos nuevo empleado en caso de que haya
-	set @subxml = (select TOP 1 NuevoEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
+
 	--si no es nulo realizamos la insercion del empleado
-	if (@subxml is not null)
+	if (@subxml.value('(/root/NuevoEmpleado/NuevoEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			--en caso de ser fin de semana:
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
-					
-						
-
 
 					-- insertamos los empleados que se ingresan hoy
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
-					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
+					FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
 					WITH (
 						FechaNacimiento DATE,
 						Nombre varchar(100),
@@ -377,7 +378,7 @@ BEGIN
 					--colocamos los usuarios en los empleados
 					Update dbo.Empleado
 					SET IdUsuario = (Select top 1 ID from dbo.Usuarios c where c.username = XMLDATA.Username and c.Pwd = XMLDATA.Password)
-					FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
+					FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
 					WITH(
 						Username varchar(64),
 						Password varchar(64),
@@ -392,13 +393,13 @@ BEGIN
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
@@ -410,7 +411,7 @@ BEGIN
 				begin
 					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idUsuario,idTipoDocumentacionIdentidad)
 						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad
-						FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3)
+						FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3)
 						WITH (
 							FechaNacimiento DATE,
 							Nombre varchar(100),
@@ -420,44 +421,41 @@ BEGIN
 							idTipoDocumentacionIdentidad int
 							)
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Nuevo Empleado' FROM OPENXML (@hdoc,'/root/NuevoEmpleado/NuevoEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
 				end	
-				EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
 
-		set @subxml = (select TOP 1 EliminarEmpleado FROM @TablaOperaciones WHERE id = @CursorTestID)
-	if @subxml is not null
+	--eliminar empleado
+	if (@subxml.value('(/root/EliminarEmpleado/EliminarEmpleado/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			-- en caso de ser fin de semana:
-			--Select FinSema = @Fin_Semana
+
 			if(@Fecha_Actual = @Fin_Semana)
 				begin
 					Update Empleado
 					SET Visible = 0
-					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) 
+					FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) 
 					WITH(
 						ValorDocumentoIdentidad varchar(16)
 					) AS X inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
 
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
@@ -469,127 +467,114 @@ BEGIN
 				begin
 					INSERT INTO @EliminarEmpleadoTemp(ValorDocumentoIdentidad)
 					SELECT ValorDocumentoIdentidad
-					FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3)
+					FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3)
 					WITH(
 						ValorDocumentoIdentidad varchar(16)
 					)
 
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Eliminar Empleado' FROM OPENXML (@hdoc,'/root/EliminarEmpleado/EliminarEmpleado',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
 
 				end
-				EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
 
-		-- cargamos asocia empleado con deduccion en caso de que haya
-	set @subxml = (select TOP 1 AsociaEmpleadoConDeduccion FROM @TablaOperaciones WHERE id = @CursorTestID)
-	if @subxml is not null
-		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
+	-- cargamos asocia empleado con deduccion en caso de que haya
+	if (@subxml.value('(/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion/@Secuencia)[1]', 'varchar(64)') is not null)
 
+		begin
 				INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
 					SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
-					FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3)
+					FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3)
 						WITH (
 							IdDeduccion int,
 							ValorDocumentoIdentidad int,
 							Monto money
 						) cr
 
-				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
+				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Asocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Asocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/AsociaEmpleadoConDeduccion/AsociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
-			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
 
 		-- cargamos desasocia empleado con deduccion en caso de que haya
-	set @subxml = (select TOP 1 DesasociaEmpleadoConDeduccion FROM @TablaOperaciones WHERE id = @CursorTestID)
-	if @subxml is not null
+	if (@subxml.value('(/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			begin
 				Update dbo.DeduccionesXEmpleado
 					SET Visible = 0
-					FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3)
+					FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3)
 					WITH(
 						IdDeduccion int,
 						ValorDocumentoIdentidad varchar(16)
 					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
+					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Desasocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Desasocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
 			end
-			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
 
 		-- cargamos tipo de jornada en caso de que haya
-	set @subxml = (select TOP 1 TipoDeJornadaProximaSemana FROM @TablaOperaciones WHERE id = @CursorTestID)
-	if @subxml is not null
+	if (@subxml.value('(/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana/@Secuencia)[1]', 'varchar(64)') is not null)
 		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
 			--if(@Fecha_Actual = @Fin_Semana)
 			--begin
 				INSERT INTO dbo.Jornada(IdTipoJornada,IdEmpleado)
 					SELECT IdJornada,(Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad)
-					FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3)
+					FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3)
 						WITH (
 							IdJornada int,
 							ValorDocumentoIdentidad int
 						) cr
 
 
-				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3) WITH (ProduceError int) where ProduceError = 1)
+				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Tipo de Jornada Proxima Semana' FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'Tipo de Jornada Proxima Semana' FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
 			--end
-			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 		end
 
 		-- cargamosmarca de asistencia en caso de que haya
 	begin transaction Marca
-	set @subxml = (select TOP 1 MarcaDeAsistencia FROM @TablaOperaciones WHERE id = @CursorTestID)
-	if @subxml is not null
-		begin
-			EXEC sp_xml_preparedocument @hdoc OUTPUT, @subxml/*Toma el identificador y a la variable con el documento y las asocia*/
-			
-			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
-			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3)
+	if (@subxml.value('(/root/MarcaDeAsistencia/MarcaDeAsistencia/@Secuencia)[1]', 'varchar(64)') is not null)
+		begin			
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
+			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3)
 				WITH (
 					FechaEntrada datetime,
 					FechaSalida datetime,
@@ -620,18 +605,17 @@ BEGIN
 				--set @cntx = @cntx +1
 			--end
 
-			IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3) WITH (ProduceError int) where ProduceError = 1)
+			IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3) WITH (ProduceError int) where ProduceError = 1)
 					BEGIN
 						BEGIN TRY
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'MarcaAsistencia' FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
+							SELECT Secuencia, ProduceError,'MarcaAsistencia' FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
 							exec SP_ERRORINFO
 						END CATCH
 					END
 
-			EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 
 		end
 	IF (@Fecha_Actual = @Fin_Mes)
@@ -666,3 +650,22 @@ BEGIN
 	SET @CursorTestID = @CursorTestID + 1 
 end
 EXEC dbo.SETNETO
+EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
+
+
+COMMIT TRANSACTION;  -- Garantiza el todo 
+			--(respecto del todo o nada, de la A de ACID, atomico)
+print 'Fin del SP'
+END TRY
+BEGIN CATCH
+		-- @@Trancount indica cuantas transacciones de BD estan activas 
+		IF @@Trancount>0 
+			print 'Hubo un error! en la linea: ' + ERROR_LINE()
+			print ERROR_MESSAGE ( )
+			
+			ROLLBACK TRANSACTION ; -- garantiza el nada, pues si hubo error 
+			-- quiero que la BD quede como si nada hubiera pasado
+
+	END CATCH;
+	SET NOCOUNT OFF;
+

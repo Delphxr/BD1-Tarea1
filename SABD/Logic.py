@@ -154,9 +154,11 @@ def get_planilla_semana(id):
     dias_semana = ["Viernes","Sabado","Domingo","Lunes","Martes","Miercoles","Jueves"]
     planillas = DataBaseEmpleados.get_planillas_semana(id)
     feriados = DataBaseEmpleados.get_feriados()
+
     lista_feriados = []
     for f in feriados:
         lista_feriados += [datetime.strptime(f[1], '%Y-%m-%d').date()]
+    
     marcas_dias = []
     deducciones_dias = []
 
