@@ -30,12 +30,7 @@ DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MovimientoDeduccion/*Limpia la tabla Empleados*/
-DELETE FROM dbo.Puestos
-DELETE FROM dbo.Departamentos
-DELETE FROM dbo.tipoDocIdent
-DELETE FROM dbo.TipoJornada
-DELETE FROM dbo.TipoMovimiento
-DELETE FROM dbo.TipoDeduccion
+
 
 DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
 
@@ -49,11 +44,17 @@ DELETE FROM dbo.Jornada/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('Jornada', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.Corrida
 DELETE FROM dbo.DetalleCorrida
+DELETE FROM dbo.Corrida
+
 DBCC CHECKIDENT ('Corrida', RESEED, 0)
 DBCC CHECKIDENT ('DetalleCorrida', RESEED, 0)
-
+DELETE FROM dbo.Puestos
+DELETE FROM dbo.Departamentos
+DELETE FROM dbo.tipoDocIdent
+DELETE FROM dbo.TipoJornada
+DELETE FROM dbo.TipoMovimiento
+DELETE FROM dbo.TipoDeduccion
 
 
 print 'terminando limpiar base de datos'
