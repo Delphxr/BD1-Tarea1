@@ -3,38 +3,42 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[SPMOVIMIENTOS]  @Fecha_Actual date, @Fin_Semana date
+ALTER PROCEDURE [dbo].[SPMOVIMIENTOS]  @Fecha_Actual date, @Fin_Semana date --Recibe la fecha actual y el ultimo dia de la semana
 AS
-	declare @cntx int = 1
+	declare @cntx int = 1--Para iterar en la tabla
 	declare @cntrendx int
-	declare @monto int
-	declare @salario money = 0
-	declare @horas int
-	declare @horas_extra int
-	declare @monto_adicional money=0
+	declare @salario money = 0 --Se guarda el monto normal de 8 horas
+	declare @horas int--Cantidad de horas trabajadas
+	declare @horas_extra int--Cantidad de horas extra trabajadas
+	declare @monto_adicional money=0 --Monto adicional debido a las horas extra
 
 
 	set @cntx = 1;
-			select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;
+			select @cntrendx = COUNT(0) from dbo.MarcasAsistencia;--Cantidad de filas
+
 			while @cntx <= @cntrendx
 			begin
-				
+				--Calcula las horas trabajadas
 				set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @cntx), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @cntx))
+				--En caso de se 8 horas o menos
 				IF (@horas <= 8)
 					begin
+						--Calcula el salario recibido en esa cantidad de horas
 						set @salario = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
 					end
 				ELSE
 					begin
+						--Calcula el salario de 8 horas trabajadas
 						set @salario = (8 * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))   )
+						--Calcula las horas extra
 						SET @horas_extra = @horas - 8
-						
+						--Revisa si es feriado
 						IF EXISTS (SELECT Fecha FROM dbo.Feriados WHERE Fecha = @Fecha_Actual) or DATEPART(DW, @Fecha_Actual) = 1
 							begin
-								
+								--Se calcula el monto adicional en caso de ser feriado
 								set @monto_adicional = (2*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
 								
-								
+								--Inserta en MovientoPlanilla el movimiento
 								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 								SELECT FechaSalida,@monto_adicional,3,E.ID,1 FROM dbo.MarcasAsistencia MA
 								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
@@ -42,13 +46,16 @@ AS
 							end
 						ELSE
 							begin
+								--Calcula el monto adicional en un dia comun
 								set @monto_adicional = (1.5*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @cntx)))))
+								--Inserta en MovientoPlanilla el movimiento
 								INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 								SELECT FechaSalida,@monto_adicional,2,E.ID,1 FROM dbo.MarcasAsistencia MA
 								inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
 							end
 					
 					end
+				--Inserta en movimiento plantilla el salario de horas normales trabajadas
 				INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 				SELECT FechaSalida,@salario,1,E.ID,1 FROM dbo.MarcasAsistencia MA
 				inner join dbo.Empleado E ON MA.ID = @cntx and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
@@ -61,21 +68,35 @@ AS
 				set @cntx = @cntx +1
 			end
 			--SELECT ID FROM dbo.MovimientoPlanilla WHERE Fecha = @Fecha_Actual
+
+
+
+
+
+
+
+
+
+
+			--Inserta en Movimiento Horas
+			--NOTA IMPORTANTE EL SET IDENTITY FUE PORQUE PARA NO CAMBIAR EL PK USE ESTO PERO CREO QUE UD SI CAMBIO EL PK
 			SET IDENTITY_INSERT dbo.MovimientoHoras ON
 			INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
 			SELECT MP.ID,MA.ID FROM dbo.MovimientoPlanilla MP inner join dbo.MarcasAsistencia MA ON (MP.IdTipoMov = 1 or MP.IdTipoMov = 2 or MP.IdTipoMov = 3)
 			inner join dbo.Empleado E ON E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion and E.ID = MP.IdEmpleado and CONVERT(DATE,MA.FechaSalida) = MP.Fecha and CONVERT(DATE,MA.FechaSalida) = @Fecha_Actual
 			SET IDENTITY_INSERT dbo.MovimientoHoras OFF
 
+			--Si es el ultimo dia de la semana
 			IF (@Fecha_Actual = @Fin_Semana)
 			begin
 			set @cntx = 1;
 			select @cntrendx = COUNT(0) from dbo.DeduccionesXEmpleado;
 			while @cntx <= @cntrendx
 				begin
-		
+			--Si la deduccion al empleado es visible
 				if (SELECT TOP 1 Visible FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx) = 1
 				begin
+					--Inserte en movimiento plantilla la deduccion
 					INSERT INTO [dbo].[MovimientoPlanilla]
 						   ([Fecha]
 						   ,[Monto]
@@ -88,7 +109,7 @@ AS
 						   ,4
 						   ,(SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID = @cntx)
 						   ,1)
-
+					--Inserte la deduccion en movimiento deduccion
 					SET IDENTITY_INSERT dbo.MovimientoDeduccion ON
 					INSERT INTO [dbo].[MovimientoDeduccion]
 					   ([ID]
