@@ -427,7 +427,7 @@ BEGIN
 	DELETE FROM @NuevoEmpleado
 	DELETE FROM @EliminarEmpleado
 	DELETE FROM @AsociaEmpleadoConDeduccion
-	DELETE FROM @AsociaEmpleadoConDeduccion
+	DELETE FROM @DesasociaEmpleadoConDeduccion
 	DELETE FROM @NuevasJornadas
 	DELETE FROM @MarcaAsistencia
 
@@ -498,6 +498,7 @@ BEGIN
 				IdDeduccion INT,
 				ProduceError INT
 			)
+	--select * from @DesasociaEmpleadoConDeduccion
 
 	INSERT INTO @NuevasJornadas (
 			Secuencia,
@@ -872,7 +873,6 @@ BEGIN
 				FROM @DesasociaEmpleadoConDeduccion AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 				inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 				WHERE Secuencia=@SubCursorID
-
 			IF (SELECT TOP 1 ProduceError FROM @DesasociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
 				BEGIN TRY
@@ -1089,9 +1089,8 @@ END TRY
 BEGIN CATCH
 		-- @@Trancount indica cuantas transacciones de BD estan activas 
 		IF @@Trancount>0 
-			print 'Hubo un error! en la linea: '
-			print @Fecha_Actual
-			print ERROR_LINE()
+			print '##################################################'
+			print 'Hubo un error! en la linea: ' + convert(varchar,ERROR_LINE()) + ', el dia: ' + convert(varchar,@Fecha_Actual)
 			print ERROR_MESSAGE ( )
 
 			
