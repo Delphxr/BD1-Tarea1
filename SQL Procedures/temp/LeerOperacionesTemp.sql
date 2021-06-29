@@ -407,26 +407,15 @@ WHILE @CursorTestID <= @RowCnt
 BEGIN
 	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
 	print @Fecha_Actual
-	--revisamos los detalles de la corrida de la fecha actual
-	-- para saber si ya se termino de ejecutar(2), aun esta en proceso(1), o del todo no ha empezado (3)
-	EXEC	[dbo].[GetResultadoCorrida]
-		@inFechaOperacion = @Fecha_Actual,
-		@outResultado = @resultadoCorrida OUTPUT
+	
 
-	IF @resultadoCorrida = 3 OR @resultadoCorrida = 1
-	BEGIN
 		--creamos una nueva corrida
 		EXEC	[dbo].[NuevaCorrida]
 			@inFechaOperacion = @Fecha_Actual,
 			@inTipoRegistro = 1, --inicio de corrida
 			@OutResultCode = @dummyReturnCode OUTPUT
-		SET @CorridaActual = SCOPE_IDENTITY()
-	END
-	ELSE --si la fecha actual ya se ejecuto cambiamos a la siguiente
-	BEGIN
-		SET @CursorTestID = @CursorTestID + 1 
-		CONTINUE
-	END
+		SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
+
 		
 
 	-- cargamos el xml para la fecha actual
@@ -608,6 +597,13 @@ BEGIN
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
+							print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'NUEVO EMPLEADO' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+							--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 						--guardamos el error en detalle corrida y volvemos al inicio
 							EXEC [dbo].[NuevoDetalleCorrida]
 								@inIdCorrida = @CorridaActual,
@@ -633,6 +629,13 @@ BEGIN
 							SELECT 1/0
 						END TRY
 						BEGIN CATCH
+							print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'NUEVO EMPLEADO' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+							--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 							--guardamos el error en detalle corrida y volvemos al inicio
 							EXEC [dbo].[NuevoDetalleCorrida]
 								@inIdCorrida = @CorridaActual,
@@ -707,6 +710,13 @@ BEGIN
 						SELECT 1/0
 					END TRY
 					BEGIN CATCH
+						print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'ELIMINAR EMPLEADO' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+						--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 						--guardamos el error en detalle corrida y volvemos al inicio
 							EXEC [dbo].[NuevoDetalleCorrida]
 								@inIdCorrida = @CorridaActual,
@@ -734,6 +744,13 @@ BEGIN
 						SELECT 1/0
 					END TRY
 					BEGIN CATCH
+						print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'ELIMINAR EMPLEADO' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+						--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 						--guardamos el error en detalle corrida y volvemos al inicio
 							EXEC [dbo].[NuevoDetalleCorrida]
 								@inIdCorrida = @CorridaActual,
@@ -794,6 +811,13 @@ BEGIN
 					SELECT 1/0
 				END TRY
 				BEGIN CATCH
+					print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'NUEVA DEDUCCION' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+					--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 					--guardamos el error en detalle corrida y volvemos al inicio
 					EXEC [dbo].[NuevoDetalleCorrida]
 						@inIdCorrida = @CorridaActual,
@@ -855,6 +879,13 @@ BEGIN
 					SELECT 1/0
 				END TRY
 				BEGIN CATCH
+					print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'ELIMINAR DEDUCCION' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+					--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 					--guardamos el error en detalle corrida y volvemos al inicio
 					EXEC [dbo].[NuevoDetalleCorrida]
 						@inIdCorrida = @CorridaActual,
@@ -913,6 +944,13 @@ BEGIN
 					SELECT 1/0
 				END TRY
 				BEGIN CATCH
+					print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'NUEVA JORNADA' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+					--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 					--guardamos el error en detalle corrida y volvemos al inicio
 					EXEC [dbo].[NuevoDetalleCorrida]
 						@inIdCorrida = @CorridaActual,
@@ -976,6 +1014,13 @@ BEGIN
 					SELECT 1/0
 				END TRY
 				BEGIN CATCH
+					print 'Hubo un error en la secuencia #'+ convert(varchar, @SubCursorID) + ' del tipo ' + 'MARCA ASISTENCIA' + ' el dia ' + convert(varchar, @Fecha_Actual) 
+					--creamos una nueva corrida ya que hay un reinicio
+							EXEC	[dbo].[NuevaCorrida]
+								@inFechaOperacion = @Fecha_Actual,
+								@inTipoRegistro = 1, --reinicio de corrida
+								@OutResultCode = @dummyReturnCode OUTPUT
+							SET @CorridaActual = (select MAX(ID) FROM dbo.Corrida)
 					--guardamos el error en detalle corrida y volvemos al inicio
 					EXEC [dbo].[NuevoDetalleCorrida]
 						@inIdCorrida = @CorridaActual,
@@ -1025,8 +1070,11 @@ BEGIN
 	COMMIT TRANSACTION Marca
 
 	
-	
-
+	--marcamos la corrida como terminada
+	EXEC [dbo].[NuevaCorrida]
+		@inFechaOperacion = @Fecha_Actual,
+		@inTipoRegistro = 2, --fin de corrida
+		@OutResultCode = @dummyReturnCode OUTPUT
 	SET @CursorTestID = @CursorTestID + 1 
 end
 EXEC dbo.SETNETO
