@@ -12,7 +12,14 @@ DECLARE @IDSemanaActual int =(SELECT ID FROM dbo.SemanaPlanilla WHERE @FechaMov 
 
 IF(@Mov = 1 or @Mov = 2 or @Mov = 3)
 begin
-
+	IF(@Mov =1)
+	begin
+	SET IDENTITY_INSERT dbo.MovimientoHoras ON
+	INSERT INTO dbo.MovimientoHoras(ID,IdMarcaAsistencia)
+	SELECT I.ID,M.ID from inserted I inner join dbo.Empleado E ON E.ID = I.IdEmpleado
+	inner join dbo.MarcasAsistencia M ON E.ValorDocumentoIdentidad = M.ValorDocumentoIdentificacion and I.Fecha = CONVERT(DATE,M.FechaSalida)
+	SET IDENTITY_INSERT dbo.MovimientoHoras OFF
+	end
 	IF (not EXISTS(SELECT P.IdEmpleado FROM dbo.PlanillaXMesXEmpleado P inner join inserted I ON I.IdEmpleado = P.IdEmpleado and P.idMes = @IDMesActual) and  @Inicio_Mes = @FechaMov)
 	begin
 		INSERT INTO dbo.PlanillaXMesXEmpleado(IdEmpleado,idMes,SalarioBruto,SalarioNeto,TotalDeducciones)
@@ -95,4 +102,4 @@ begin
 		inner join MesPlanilla M ON I.Fecha between M.FechaInicio and M.FechaFin and M.ID = D.IdMes
 		inner join PlanillaXMesXEmpleado P ON P.IdEmpleado = I.IdEmpleado and M.ID = P.idMes
 	end
-end   
+end
