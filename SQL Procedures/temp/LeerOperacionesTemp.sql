@@ -7,7 +7,7 @@ BEGIN TRANSACTION
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -394,9 +394,13 @@ DECLARE @resultadoCorrida INT
 DECLARE @CorridaActual INT --aqui vamos a guardar el Id de la corrida actual
 DECLARE @DetalleCorrida INT
 DECLARE @dummyReturnCode INT --para los SP que requieren un output
-
+DECLARE @MarcaActual INT
 DECLARE @SubCursorID INT --cursor para los loops anidados
 DECLARE @SubRowCnt INT
+declare @salario money = 0 --Se guarda el monto normal de 8 horas
+declare @horas int--Cantidad de horas trabajadas
+declare @horas_extra int--Cantidad de horas extra trabajadas
+declare @monto_adicional money=0 --Monto adicional debido a las horas extra
 
 --reiniciamos todo lo necesario para iterar de nuevo
 set @CursorTestID = 1;
@@ -498,6 +502,7 @@ BEGIN
 				IdDeduccion INT,
 				ProduceError INT
 			)
+
 	--select * from @DesasociaEmpleadoConDeduccion
 
 	INSERT INTO @NuevasJornadas (
@@ -994,7 +999,7 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @MarcaAsistencia);
 
-
+	BEGIN TRY
 	BEGIN TRANSACTION Marca
 
 	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
@@ -1002,11 +1007,56 @@ BEGIN
 		--iniciamos loop de marca asistencia
 		WHILE @SubCursorID <= @SubRowCnt
 		BEGIN
-			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
 			SELECT FechaEntrada,FechaSalida,ValorDocumentoIdentidad 
 			FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID
-		
-			--EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
+
+			SET @MarcaActual = (SELECT TOP 1 ID FROM MarcasAsistencia ORDER BY ID DESC)
+			--select @MarcaActual
+
+			--EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana,@MarcaActual
+			--Calcula las horas trabajadas
+			set @horas = DATEDIFF(hour, (select TOP 1 FechaEntrada FROM dbo.MarcasAsistencia WHERE id = @MarcaActual), (select TOP 1 FechaSalida FROM dbo.MarcasAsistencia WHERE id = @MarcaActual))
+			--En caso de se 8 horas o menos
+			IF (@horas <= 8)
+			begin
+				--Calcula el salario recibido en esa cantidad de horas
+				set @salario = (@horas * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @MarcaActual)))   )
+			end
+			ELSE
+			begin
+				--Calcula el salario de 8 horas trabajadas
+				set @salario = (8 * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @MarcaActual)))   )
+				--Calcula las horas extra
+				SET @horas_extra = @horas - 8
+				--Revisa si es feriado
+				IF EXISTS (SELECT Fecha FROM dbo.Feriados WHERE Fecha = @Fecha_Actual) or DATEPART(DW, @Fecha_Actual) = 1
+				begin
+					--Se calcula el monto adicional en caso de ser feriado
+					set @monto_adicional = (2*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @MarcaActual)))))
+								
+					--Inserta en MovientoPlanilla el movimiento
+					INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+					SELECT MA.FechaSalida,@monto_adicional,3,E.ID,1 FROM dbo.MarcasAsistencia MA
+					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+
+				end
+				ELSE
+				begin
+					--Calcula el monto adicional en un dia comun
+					set @monto_adicional = (1.5*(@horas_extra * (select top 1 SalarioXHora from dbo.Puestos cr where cr.ID = (select top 1 IdPuesto FROM dbo.Empleado c where c.ValorDocumentoIdentidad = (select TOP 1 ValorDocumentoIdentidad FROM dbo.MarcasAsistencia WHERE id = @MarcaActual)))))
+					--Inserta en MovientoPlanilla el movimiento
+					INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+					SELECT MA.FechaSalida,@monto_adicional,2,E.ID,1 FROM dbo.MarcasAsistencia MA
+					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+				end
+					
+			end
+			--Inserta en movimiento plantilla el salario de horas normales trabajadas
+			INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
+			SELECT MA.FechaSalida,@salario,1,E.ID,1 FROM dbo.MarcasAsistencia MA
+			inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+			
 
 			IF (SELECT TOP 1 ProduceError FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
@@ -1036,7 +1086,7 @@ BEGIN
 			
 			SET @SubCursorID = @SubCursorID +1
 		END
-		EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
+		--EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
 		EXEC [dbo].[NuevoDetalleCorrida]
 			@inIdCorrida = @CorridaActual,
 			@inTipoOperacion = 6, --6=marca asistencia
@@ -1059,7 +1109,7 @@ BEGIN
 		begin
 			INSERT INTO dbo.SemanaPlanilla(FechaInicio,Fechafin,IdMes)
 			SELECT DATEADD(DAY,1,@Fin_Semana),DATEADD(WEEK,1,@Fin_Semana),ID FROM dbo.MesPlanilla WHERE DATEADD(DAY,1,@Fin_Semana) BETWEEN MesPlanilla.FechaInicio and MesPlanilla.FechaFin
-			--EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
+			EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
 
 			SET @Fin_Semana = DATEADD(WEEK,1,@Fin_Semana)
 			
@@ -1068,7 +1118,19 @@ BEGIN
 		end
 	
 	COMMIT TRANSACTION Marca
+	END TRY
+	BEGIN CATCH
+		-- @@Trancount indica cuantas transacciones de BD estan activas 
+		IF @@Trancount>0 
+			print '##################################################'
+			print 'Hubo un error! en la linea: ' + convert(varchar,ERROR_LINE()) + ', el dia: ' + convert(varchar,@Fecha_Actual)
+			print ERROR_MESSAGE ( )
 
+			
+			ROLLBACK TRANSACTION ; -- garantiza el nada, pues si hubo error 
+			-- quiero que la BD quede como si nada hubiera pasado
+
+	END CATCH;
 	
 	--marcamos la corrida como terminada
 	EXEC [dbo].[NuevaCorrida]
