@@ -1,4 +1,11 @@
-CREATE PROCEDURE dbo.DesasociarDeduccion
+USE [PlanillaObrera_BD]
+GO
+/****** Object:  StoredProcedure [dbo].[DesasociarDeduccion]    Script Date: 29/06/2021 02:23:07 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[DesasociarDeduccion]
 	-- parametros de entrada
 	  @inId INT
 
@@ -24,6 +31,20 @@ BEGIN
 		UPDATE [dbo].[DeduccionesXEmpleado]
 		   SET [Visible] = 0
 		 WHERE ID=@inId
+
+			DECLARE @fecha DATE = GETDATE()
+			DECLARE @Dummyreturn INT
+			DECLARE @detalle VARCHAR(128) = (Select top 1 nombre from dbo.TipoDeduccion t where t.id = (SELECT TOP 1 IdTipoDeduccion FROM dbo.DeduccionesXEmpleado WHERE ID=@inId))
+			DECLARE @idemp INT = (SELECT TOP 1 IdEmpleado FROM dbo.DeduccionesXEmpleado WHERE ID=@inId)
+			SET @detalle = 'NuevaDeduccion ' + @detalle
+			exec dbo.NuevoHistorial 
+						  @inIdEmpleado = @idemp
+						, @inValorModificado = @detalle
+						, @inValorAnterior = 1
+						, @inValorNuevo = 0
+						, @inFecha = @fecha
+						-- parametros de salida
+						, @OutResultCode = @Dummyreturn OUTPUT
 
 	END TRY
 	BEGIN CATCH

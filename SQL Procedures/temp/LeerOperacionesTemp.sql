@@ -1,4 +1,4 @@
-
+--aaaaa
 SET NOCOUNT ON
 BEGIN TRY
 BEGIN TRANSACTION
@@ -7,7 +7,7 @@ BEGIN TRANSACTION
 DECLARE @Datos XML/*Declaramos la variable Datos como un tipo XML*/
  
 SELECT @Datos = D  /*El select imprime los contenidos del XML para dejarlo cargado en memoria*/
-FROM OPENROWSET (BULK 'C:\Users\jenar\OneDrive\Documentos\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
+FROM OPENROWSET (BULK 'C:\Users\Oswaldo\Desktop\Datos_Tarea3.xml', SINGLE_BLOB) AS Datos(D) --ruta del xml
 -- para las pruebas estamos manejando ruta estatica, ya una vez terminado
 -- hacemos que la ruta sea dinamica
 
@@ -30,9 +30,12 @@ DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
 DELETE FROM dbo.MovimientoDeduccion/*Limpia la tabla Empleados*/
-
+DBCC CHECKIDENT ('MovimientoDeduccion', RESEED, 0)/*Reinicia el identify*/
 
 DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoHoras', RESEED, 0)/*Reinicia el identify*/
+
+
 
 DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
 DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
@@ -402,6 +405,14 @@ declare @horas int--Cantidad de horas trabajadas
 declare @horas_extra int--Cantidad de horas extra trabajadas
 declare @monto_adicional money=0 --Monto adicional debido a las horas extra
 
+--para manejar los cambios en el historial de deducciones
+declare @idEMP int
+declare @new sql_variant
+declare @old sql_variant
+declare @detalle varchar(100)
+declare @output int
+
+
 --reiniciamos todo lo necesario para iterar de nuevo
 set @CursorTestID = 1;
 set  @RowCnt = 0;
@@ -411,7 +422,7 @@ WHILE @CursorTestID <= @RowCnt
 BEGIN
 	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
 	print @Fecha_Actual
-	
+
 
 		--creamos una nueva corrida
 		EXEC	[dbo].[NuevaCorrida]
@@ -585,7 +596,7 @@ BEGIN
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
 					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
 					FROM @NuevoEmpleadoTemp
-					DELETE FROM @NuevoEmpleadoTemp
+					
 
 					--colocamos los usuarios en los empleados
 					Update dbo.Empleado
@@ -626,8 +637,8 @@ BEGIN
 			ELSE
 				begin
 					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idUsuario,idTipoDocumentacionIdentidad)
-						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,IdTipoDocumentoIdentidad
-						FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
+					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,IdTipoDocumentoIdentidad
+					FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
 					IF (SELECT TOP 1 ProduceError FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID) = 1
 					BEGIN
@@ -802,14 +813,31 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @AsociaEmpleadoConDeduccion);
 
+
+
 	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
 	BEGIN
 		--iniciamos loop de nueva deduccion
 		WHILE @SubCursorID <= @SubRowCnt
 		BEGIN
+
 			INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
 				SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
 				FROM @AsociaEmpleadoConDeduccion cr WHERE Secuencia = @SubCursorID
+			
+			set @idEMP = (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = (select top 1 ValorDocumentoIdentidad FROM @AsociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID ))
+			set @new = (select top 1 Monto from @AsociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID)
+			set @old = 0
+			set @detalle = (Select top 1 nombre from dbo.TipoDeduccion t where t.id = (select top 1 IdDeduccion from @AsociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID))
+			set @detalle = 'NuevaDeduccion ' + @detalle
+			exec dbo.NuevoHistorial 
+						  @inIdEmpleado = @idEMP
+						, @inValorModificado = @detalle
+						, @inValorAnterior = @old
+						, @inValorNuevo = @new
+						, @inFecha = @Fecha_Actual
+						-- parametros de salida
+						, @OutResultCode = @dummyReturnCode OUTPUT
 
 			IF (SELECT TOP 1 ProduceError FROM @AsociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
@@ -878,6 +906,21 @@ BEGIN
 				FROM @DesasociaEmpleadoConDeduccion AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
 				inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
 				WHERE Secuencia=@SubCursorID
+
+			set @new = 0
+			set @old = 1
+			set @detalle = (Select top 1 nombre from dbo.TipoDeduccion t where t.id = (select top 1 IdDeduccion from @DesasociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID))
+			set @detalle = 'EliminarDeduccion ' + @detalle
+			set @idEMP = (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = (select top 1 ValorDocumentoIdentidad FROM @DesasociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID ))
+			exec dbo.NuevoHistorial 
+						  @inIdEmpleado = @idEMP
+						, @inValorModificado = @detalle
+						, @inValorAnterior = @old
+						, @inValorNuevo = @new
+						, @inFecha = @Fecha_Actual
+						-- parametros de salida
+						, @OutResultCode = @dummyReturnCode OUTPUT
+
 			IF (SELECT TOP 1 ProduceError FROM @DesasociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
 				BEGIN TRY
@@ -934,6 +977,7 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @NuevasJornadas);
 
+				
 	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
 	BEGIN
 		--iniciamos loop de nueva jornada
@@ -1007,7 +1051,7 @@ BEGIN
 		--iniciamos loop de marca asistencia
 		WHILE @SubCursorID <= @SubRowCnt
 		BEGIN
-			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentificacion)
+			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
 			SELECT FechaEntrada,FechaSalida,ValorDocumentoIdentidad 
 			FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID
 
@@ -1038,7 +1082,7 @@ BEGIN
 					--Inserta en MovientoPlanilla el movimiento
 					INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 					SELECT MA.FechaSalida,@monto_adicional,3,E.ID,1 FROM dbo.MarcasAsistencia MA
-					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentidad
 
 				end
 				ELSE
@@ -1048,14 +1092,14 @@ BEGIN
 					--Inserta en MovientoPlanilla el movimiento
 					INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 					SELECT MA.FechaSalida,@monto_adicional,2,E.ID,1 FROM dbo.MarcasAsistencia MA
-					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+					inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentidad
 				end
 					
 			end
 			--Inserta en movimiento plantilla el salario de horas normales trabajadas
 			INSERT INTO dbo.MovimientoPlanilla(Fecha,Monto,IdTipoMov,IdEmpleado,Visible)
 			SELECT MA.FechaSalida,@salario,1,E.ID,1 FROM dbo.MarcasAsistencia MA
-			inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentificacion
+			inner join dbo.Empleado E ON MA.ID = @MarcaActual and CONVERT(DATE,FechaSalida) = @Fecha_Actual and E.ValorDocumentoIdentidad = MA.ValorDocumentoIdentidad
 			
 
 			IF (SELECT TOP 1 ProduceError FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID) = 1
@@ -1125,10 +1169,6 @@ BEGIN
 			print '##################################################'
 			print 'Hubo un error! en la linea: ' + convert(varchar,ERROR_LINE()) + ', el dia: ' + convert(varchar,@Fecha_Actual)
 			print ERROR_MESSAGE ( )
-
-			
-			ROLLBACK TRANSACTION ; -- garantiza el nada, pues si hubo error 
-			-- quiero que la BD quede como si nada hubiera pasado
 
 	END CATCH;
 	

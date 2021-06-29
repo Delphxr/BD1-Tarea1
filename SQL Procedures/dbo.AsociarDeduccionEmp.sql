@@ -1,4 +1,11 @@
-CREATE PROCEDURE dbo.AsociarDeduccionEmpleado
+USE [PlanillaObrera_BD]
+GO
+/****** Object:  StoredProcedure [dbo].[AsociarDeduccionEmpleado]    Script Date: 29/06/2021 02:20:02 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[AsociarDeduccionEmpleado]
 	-- parametros de entrada
 	  @inIdEmpleado INT
 	, @inTipoDeduccion INT
@@ -42,6 +49,19 @@ BEGIN
 			,@inTipoDeduccion
 			,@inMonto
 			,1)
+
+			DECLARE @fecha DATE = GETDATE()
+			DECLARE @Dummyreturn INT
+			DECLARE @detalle VARCHAR(128) = (Select top 1 nombre from dbo.TipoDeduccion t where t.id = @inTipoDeduccion)
+			SET @detalle = 'NuevaDeduccion ' + @detalle
+			exec dbo.NuevoHistorial 
+						  @inIdEmpleado = @inIdEmpleado
+						, @inValorModificado = @detalle
+						, @inValorAnterior = 0
+						, @inValorNuevo = @inMonto
+						, @inFecha = @fecha
+						-- parametros de salida
+						, @OutResultCode = @Dummyreturn OUTPUT
 
 	END TRY
 	BEGIN CATCH
