@@ -1,7 +1,9 @@
 CREATE or ALTER VIEW Departamento_Mes
 AS
-SELECT D.Nombre,AVG(P.SalarioNeto) Promedio,SUM(P.TotalDeducciones) Totaldeducciones,P.idMes
+
+SELECT D.Nombre,AVG(P.SalarioNeto) Promedio,SUM(P.TotalDeducciones) Totaldeducciones,MAX(P.SalarioNeto) SalarioMaximo,(Select TOP 1 IdEmpleado FROM dbo.PlanillaXMesXEmpleado Z WHERE Z.SalarioNeto = MAX(P.SalarioNeto)) EmpleadoMejorPagado,P.idMes
 FROM dbo.Departamentos D inner join dbo.Empleado E ON D.ID = E.IdDepartamento
 inner join dbo.PlanillaXMesXEmpleado P ON E.ID = P.IdEmpleado
 inner join dbo.MesPlanilla M ON M.ID = P.idMes
 GROUP BY D.Nombre,P.idMes
+
