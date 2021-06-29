@@ -967,6 +967,7 @@ BEGIN
 			SELECT FechaEntrada,FechaSalida,ValorDocumentoIdentidad 
 			FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID
 		
+			--EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
 
 			IF (SELECT TOP 1 ProduceError FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
