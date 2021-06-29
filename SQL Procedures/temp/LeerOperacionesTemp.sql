@@ -15,6 +15,52 @@ DECLARE @hdoc INT /*Creamos hdoc que va a ser un identificador*/
     
 EXEC sp_xml_preparedocument @hdoc OUTPUT, @Datos/*Toma el identificador y a la variable con el documento y las asocia*/
 
+-- limpiando tablas
+print 'iniciando a limpiar base de datos'
+DELETE FROM dbo.Historial
+DBCC CHECKIDENT ('Historial', RESEED, 0)
+DELETE FROM dbo.DeduccionesXMesXEmpleado
+DBCC CHECKIDENT ('DeduccionesXMesXEmpleado', RESEED, 0)
+DELETE FROM dbo.PlanillaXSemanaXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('PlanillaXSemanaXEmpleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.PlanillaXMesXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('PlanillaXMesXEmpleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.SemanaPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MovimientoDeduccion/*Limpia la tabla Empleados*/
+DELETE FROM dbo.Puestos
+DELETE FROM dbo.Departamentos
+DELETE FROM dbo.tipoDocIdent
+DELETE FROM dbo.TipoJornada
+DELETE FROM dbo.TipoMovimiento
+DELETE FROM dbo.TipoDeduccion
+
+DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
+
+DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('MarcasAsistencia', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.DeduccionesXEmpleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('DeduccionesXEmpleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.Jornada/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('Jornada', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
+DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
+DELETE FROM dbo.Corrida
+DELETE FROM dbo.DetalleCorrida
+DBCC CHECKIDENT ('Corrida', RESEED, 0)
+DBCC CHECKIDENT ('DetalleCorrida', RESEED, 0)
+
+
+
+print 'terminando limpiar base de datos'
+
+
+
+
 
 print 'iniciando a leer catalogos'
 --  ============================
@@ -135,38 +181,11 @@ WITH(/*Dentro del WITH se pone el nombre y el tipo de los atributos a retornar*/
     )
 
 print 'terminando a leer catalogos'
-print 'iniciando a limpiar base de datos'
+
 --  ============================================
 --  || Empezamos a ingresar las operaciones   ||
 --  ============================================
-DELETE FROM dbo.Historial
-DBCC CHECKIDENT ('Historial', RESEED, 0)
-DELETE FROM dbo.DeduccionesXMesXEmpleado
-DBCC CHECKIDENT ('DeduccionesXMesXEmpleado', RESEED, 0)
-DELETE FROM dbo.PlanillaXSemanaXEmpleado/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('PlanillaXSemanaXEmpleado', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.PlanillaXMesXEmpleado/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('PlanillaXMesXEmpleado', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.SemanaPlanilla/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('SemanaPlanilla', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.MesPlanilla/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('MesPlanilla', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.MovimientoDeduccion/*Limpia la tabla Empleados*/
 
-DELETE FROM dbo.MovimientoHoras/*Limpia la tabla Empleados*/
-
-DELETE FROM dbo.MovimientoPlanilla/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('MovimientoPlanilla', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.MarcasAsistencia/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('MarcasAsistencia', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.DeduccionesXEmpleado/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('DeduccionesXEmpleado', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.Jornada/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('Jornada', RESEED, 0)/*Reinicia el identify*/
-DELETE FROM dbo.Empleado/*Limpia la tabla Empleados*/
-DBCC CHECKIDENT ('Empleado', RESEED, 0)/*Reinicia el identify*/
-
-print 'terminando limpiar base de datos'
 
 -- esta tabla es para guardar las operaciones que vamos a hacer, donde cada fila es un dia diferente
 DECLARE @TablaOperaciones TABLE(
@@ -386,7 +405,7 @@ SELECT @RowCnt = COUNT(0) FROM @TablaOperaciones;
 WHILE @CursorTestID <= @RowCnt
 BEGIN
 	SET @Fecha_Actual = (Select Fecha FROM @TablaOperaciones WHERE id =@CursorTestID)
-	
+	print @Fecha_Actual
 	--revisamos los detalles de la corrida de la fecha actual
 	-- para saber si ya se termino de ejecutar(2), aun esta en proceso(1), o del todo no ha empezado (3)
 	EXEC	[dbo].[GetResultadoCorrida]
@@ -548,7 +567,7 @@ BEGIN
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @NuevoEmpleado);
 
 	--verificamos si estas operaciones ya se finalizaron
-	IF @SubCursorID != @SubRowCnt
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
 	BEGIN
 		--iniciamos loop de nuevo empleado
 		WHILE @SubCursorID <= @SubRowCnt
@@ -563,9 +582,14 @@ BEGIN
 				BEGIN
 					-- insertamos los EMPLEADOS que se ingresan hoy
 					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
-					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
+					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,IdTipoDocumentoIdentidad,1 
 					FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
+					--insertamos los empleados que se han ido acumulando
+					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
+					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
+					FROM @NuevoEmpleadoTemp
+					DELETE FROM @NuevoEmpleadoTemp
 
 					--colocamos los usuarios en los empleados
 					Update dbo.Empleado
@@ -575,10 +599,7 @@ BEGIN
 					
 
 
-					--insertamos los empleados que se han ido acumulando
-					INSERT INTO dbo.Empleado (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,IdUsuario,IdTipoIdentificacion,Visible)
-					SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad,1 
-					FROM @NuevoEmpleadoTemp
+					
 
 					IF (SELECT TOP 1 ProduceError FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID) = 1
 					BEGIN
@@ -602,7 +623,7 @@ BEGIN
 			ELSE
 				begin
 					INSERT INTO @NuevoEmpleadoTemp (FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,IdPuesto,idUsuario,idTipoDocumentacionIdentidad)
-						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,idTipoDocumentacionIdentidad
+						SELECT FechaNacimiento,Nombre,IdDepartamento,ValorDocumentoIdentidad,idPuesto,1,IdTipoDocumentoIdentidad
 						FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID
 
 					IF (SELECT TOP 1 ProduceError FROM @NuevoEmpleado WHERE Secuencia=@SubCursorID) = 1
@@ -658,7 +679,7 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @EliminarEmpleado);
 
-	IF @SubCursorID != @SubRowCnt
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
 	BEGIN
 		--iniciamos loop de eliminar empleado
 		WHILE @SubCursorID <= @SubRowCnt
@@ -677,7 +698,7 @@ BEGIN
 				SET Visible = 0
 				FROM @EliminarEmpleadoTemp AS X 
 				inner join dbo.Empleado AS E ON E.ValorDocumentoIdentidad = X.ValorDocumentoIdentidad
-				
+				DELETE FROM @EliminarEmpleadoTemp
 
 				IF (SELECT TOP 1 ProduceError FROM @EliminarEmpleado WHERE Secuencia=@SubCursorID) = 1
 				BEGIN
@@ -757,14 +778,14 @@ BEGIN
 	SET  @SubRowCnt = 0;
 	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @AsociaEmpleadoConDeduccion);
 
-	IF @SubCursorID != @SubRowCnt
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
 	BEGIN
 		--iniciamos loop de nueva deduccion
 		WHILE @SubCursorID <= @SubRowCnt
 		BEGIN
 			INSERT INTO dbo.DeduccionesXEmpleado(IdEmpleado,IdTipoDeduccion,Monto,Visible)
 				SELECT (Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad),IdDeduccion,IsNull(Monto,0),1
-				FROM @AsociaEmpleadoConDeduccion WHERE Secuencia = @SubCursorID
+				FROM @AsociaEmpleadoConDeduccion cr WHERE Secuencia = @SubCursorID
 
 			IF (SELECT TOP 1 ProduceError FROM @AsociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
 			BEGIN
@@ -784,94 +805,200 @@ BEGIN
 			END
 			SET @SubCursorID = @SubCursorID +1	
 		END
+		--guardamos en detalle corrida ya que terminó la ejecucion
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 3, -- 3= nuevadeduccion
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
 	END
 
 
+	-- ############################ --
+	-- ##== ELIMINAR DEDUCCION ==## --
+	-- ############################ --
 
-		-- cargamos desasocia empleado con deduccion en caso de que haya
-	if (@subxml.value('(/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin
-			begin
-				Update dbo.DeduccionesXEmpleado
-					SET Visible = 0
-					FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3)
-					WITH(
-						IdDeduccion int,
-						ValorDocumentoIdentidad varchar(16)
-					) AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
-					inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 4, -- 4= eliminar deduccion
+			@outResultado = @DetalleCorrida OUTPUT
 
-					IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Desasocia Empleado Deduccion' FROM OPENXML (@hdoc,'/root/DesasociaEmpleadoConDeduccion/DesasociaEmpleadoConDeduccion',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuencia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
 
-			end
-		end
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @DesasociaEmpleadoConDeduccion);
 
-		-- cargamos tipo de jornada en caso de que haya
-	if (@subxml.value('(/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin
-			--if(@Fecha_Actual = @Fin_Semana)
-			--begin
-				INSERT INTO dbo.Jornada(IdTipoJornada,IdEmpleado)
-					SELECT IdJornada,(Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad)
-					FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3)
-						WITH (
-							IdJornada int,
-							ValorDocumentoIdentidad int
-						) cr
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
+	BEGIN
+		--iniciamos loop de eliminar deduccion
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
+			Update dbo.DeduccionesXEmpleado
+				SET Visible = 0
+				FROM @DesasociaEmpleadoConDeduccion AS X inner join dbo.DeduccionesXEmpleado AS D ON D.IdTipoDeduccion = X.IdDeduccion
+				inner join dbo.Empleado AS E ON D.IdEmpleado = E.ID
+				WHERE Secuencia=@SubCursorID
+
+			IF (SELECT TOP 1 ProduceError FROM @DesasociaEmpleadoConDeduccion WHERE Secuencia=@SubCursorID) = 1
+			BEGIN
+				BEGIN TRY
+					SELECT 1/0
+				END TRY
+				BEGIN CATCH
+					--guardamos el error en detalle corrida y volvemos al inicio
+					EXEC [dbo].[NuevoDetalleCorrida]
+						@inIdCorrida = @CorridaActual,
+						@inTipoOperacion = 4, -- 4= eliminar deduccion
+						@inRefID = @SubCursorID,
+						@OutResultCode = @dummyReturnCode OUTPUT
+					SET @SubCursorID = @SubCursorID +1
+					CONTINUE
+				END CATCH
+			END	
+			SET @SubCursorID = @SubCursorID +1	
+		END
+		--guardamos en detalle corrida ya que terminó la ejecucion
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 4, -- 4= eliminar deduccion
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
+	END
 
 
-				IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'Tipo de Jornada Proxima Semana' FROM OPENXML (@hdoc,'/root/TipoDeJornadaProximaSemana/TipoDeJornadaProximaSemana',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+	-- ####################### --
+	-- ##== NUEVA JORNADA ==## --
+	-- ####################### --
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 5, -- 5=nuevajornada
+			@outResultado = @DetalleCorrida OUTPUT
 
-			--end
-		end
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuencia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
 
-		-- cargamosmarca de asistencia en caso de que haya
-	begin transaction Marca
-	if (@subxml.value('(/root/MarcaDeAsistencia/MarcaDeAsistencia/@Secuencia)[1]', 'varchar(64)') is not null)
-		begin			
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @NuevasJornadas);
+
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
+	BEGIN
+		--iniciamos loop de nueva jornada
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
+			INSERT INTO dbo.Jornada(IdTipoJornada,IdEmpleado)
+			SELECT IdJornada,(Select top 1 ID from dbo.empleado c where c.ValorDocumentoIdentidad = cr.ValorDocumentoIdentidad)
+			FROM @NuevasJornadas cr WHERE Secuencia=@SubCursorID
+
+			IF (SELECT TOP 1 ProduceError FROM @NuevasJornadas WHERE Secuencia=@SubCursorID) = 1
+			BEGIN
+				BEGIN TRY
+					SELECT 1/0
+				END TRY
+				BEGIN CATCH
+					--guardamos el error en detalle corrida y volvemos al inicio
+					EXEC [dbo].[NuevoDetalleCorrida]
+						@inIdCorrida = @CorridaActual,
+						@inTipoOperacion = 5, -- 5=nuevajornada
+						@inRefID = @SubCursorID,
+						@OutResultCode = @dummyReturnCode OUTPUT
+					SET @SubCursorID = @SubCursorID +1
+					CONTINUE
+				END CATCH
+			END
+			SET @SubCursorID = @SubCursorID +1	
+		END
+		--guardamos en detalle corrida ya que terminó la ejecucion
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 5, -- 5=nuevajornada
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
+	END
+	
+	-- ########################## --
+	-- ##== MARCA ASISTENCIA ==## --
+	-- ########################## --
+
+	--obtenemos los detalles de la corrida actual
+	EXEC	[dbo].[GetDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 6, --6=marca asistencia
+			@outResultado = @DetalleCorrida OUTPUT
+
+	IF @DetalleCorrida < 5000 --si no hubo error
+	BEGIN
+		SET @SubCursorID = @DetalleCorrida --ultimo secuencia ejecutada
+	END
+	ELSE
+	BEGIN
+		SET @SubCursorID = 1
+	END
+
+	--preparamos para el loop
+	SET  @SubRowCnt = 0;
+	SELECT @SubRowCnt = (SELECT MAX(Secuencia) FROM @MarcaAsistencia);
+
+
+	BEGIN TRANSACTION Marca
+
+	IF @SubCursorID != @SubRowCnt OR @SubRowCnt = 1
+	BEGIN
+		--iniciamos loop de marca asistencia
+		WHILE @SubCursorID <= @SubRowCnt
+		BEGIN
 			INSERT INTO dbo.MarcasAsistencia(FechaEntrada,FechaSalida,ValorDocumentoIdentidad)
-			SELECT * FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3)
-				WITH (
-					FechaEntrada datetime,
-					FechaSalida datetime,
-					ValorDocumentoIdentidad int
-				)
-
-			EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
-
+			SELECT FechaEntrada,FechaSalida,ValorDocumentoIdentidad 
+			FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID
 		
 
-			IF EXISTS (SELECT ProduceError FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3) WITH (ProduceError int) where ProduceError = 1)
-					BEGIN
-						BEGIN TRY
-							SELECT 1/0
-						END TRY
-						BEGIN CATCH
-							SELECT Secuencia, ProduceError,'MarcaAsistencia' FROM OPENXML (@hdoc,'/root/MarcaDeAsistencia/MarcaDeAsistencia',3) WITH (Secuencia int, ProduceError int) where ProduceError = 1
-							exec SP_ERRORINFO
-						END CATCH
-					END
+			IF (SELECT TOP 1 ProduceError FROM @MarcaAsistencia WHERE Secuencia=@SubCursorID) = 1
+			BEGIN
+				BEGIN TRY
+					SELECT 1/0
+				END TRY
+				BEGIN CATCH
+					--guardamos el error en detalle corrida y volvemos al inicio
+					EXEC [dbo].[NuevoDetalleCorrida]
+						@inIdCorrida = @CorridaActual,
+						@inTipoOperacion = 6, --6=marca asistencia
+						@inRefID = @SubCursorID,
+						@OutResultCode = @dummyReturnCode OUTPUT
+					SET @SubCursorID = @SubCursorID +1
+					CONTINUE
+				END CATCH
+			END
+			
+			
+			
+			SET @SubCursorID = @SubCursorID +1
+		END
+		EXEC dbo.SPMOVIMIENTOS @Fecha_Actual,@Fin_Semana
+		EXEC [dbo].[NuevoDetalleCorrida]
+			@inIdCorrida = @CorridaActual,
+			@inTipoOperacion = 6, --6=marca asistencia
+			@inRefID = @SubRowCnt,
+			@OutResultCode = @dummyReturnCode OUTPUT
 
-
-		end
+	END
+	
+	
 	IF (@Fecha_Actual = @Fin_Mes)
 		begin
 			INSERT INTO dbo.MesPlanilla(FechaInicio,FechaFin)
@@ -883,8 +1010,6 @@ BEGIN
 	
 	IF (@Fecha_Actual = @Fin_Semana)
 		begin
-			
-
 			INSERT INTO dbo.SemanaPlanilla(FechaInicio,Fechafin,IdMes)
 			SELECT DATEADD(DAY,1,@Fin_Semana),DATEADD(WEEK,1,@Fin_Semana),ID FROM dbo.MesPlanilla WHERE DATEADD(DAY,1,@Fin_Semana) BETWEEN MesPlanilla.FechaInicio and MesPlanilla.FechaFin
 			--EXEC dbo.SPMovimientoDeduccion @Fecha_Actual
@@ -894,7 +1019,8 @@ BEGIN
 			UPDATE dbo.MovimientoPlanilla
 			SET Visible = 0
 		end
-	commit transaction Marca
+	
+	COMMIT TRANSACTION Marca
 
 	
 	
@@ -908,12 +1034,16 @@ EXEC sp_xml_removedocument @hdoc/*Remueve el documento XML de la memoria*/
 COMMIT TRANSACTION;  -- Garantiza el todo 
 			--(respecto del todo o nada, de la A de ACID, atomico)
 print 'Fin del SP'
+
 END TRY
 BEGIN CATCH
 		-- @@Trancount indica cuantas transacciones de BD estan activas 
 		IF @@Trancount>0 
-			print 'Hubo un error! en la linea: ' + ERROR_LINE()
+			print 'Hubo un error! en la linea: '
+			print @Fecha_Actual
+			print ERROR_LINE()
 			print ERROR_MESSAGE ( )
+
 			
 			ROLLBACK TRANSACTION ; -- garantiza el nada, pues si hubo error 
 			-- quiero que la BD quede como si nada hubiera pasado
